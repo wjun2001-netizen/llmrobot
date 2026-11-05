@@ -338,7 +338,7 @@ def extract(runs_dir, output, *, counter=None, similarity=None, skip_invalid=Fal
     try:
         with tempfile.NamedTemporaryFile("w", encoding="utf-8", newline="", dir=output.parent, delete=False) as stream:
             temporary = Path(stream.name)
-            writer = csv.DictWriter(stream, fieldnames=COLUMNS)
+            writer = csv.DictWriter(stream, fieldnames=COLUMNS, lineterminator="\n")
             writer.writeheader()
             writer.writerows(rows)
         # Exclusive publication by default, replacing derived output only when explicitly requested.

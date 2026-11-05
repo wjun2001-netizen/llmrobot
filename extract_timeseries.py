@@ -35,7 +35,7 @@ def main():
         print(json.dumps({"output": str(args.output), "rows": report["rows"], "validation_errors": len(report["validation_errors"])}, indent=2))
         with args.output.open(encoding="utf-8") as stream:
             reader = csv.reader(stream)
-            writer = csv.writer(sys.stdout)
+            writer = csv.writer(sys.stdout, lineterminator="\n")
             for index, row in enumerate(reader):
                 if index > args.preview_rows:
                     break

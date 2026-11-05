@@ -205,6 +205,7 @@ class ExtractionTests(unittest.TestCase):
             self.assertEqual([(row["condition"], int(row["step"])) for row in rows], [("no_fault", 1), ("no_fault", 2), ("no_fault", 3), ("fault", 1), ("fault", 2)])
             self.assertEqual(report["rows"], 5)
             self.assertTrue(report["source_trajectories_unchanged"])
+            self.assertNotIn(b"\r", output.read_bytes())
             self.assertTrue(all(paths[name].read_bytes() == value for name, value in before.items()))
             self.assertEqual(rows[0]["fault_severity"], "")
             self.assertEqual(rows[0]["injection_step"], "")
