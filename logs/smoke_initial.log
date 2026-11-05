@@ -1,0 +1,9 @@
+GAME data/alfworld/json_2.1.1/train/pick_and_place_simple-AlarmClock-None-Desk-307/trial_T20190907_072303_146844/game.tw-pddl
+Traceback (most recent call last):
+  File "<stdin>", line 10, in <module>
+  File "/workspace/llmrobot/.venv/lib/python3.12/site-packages/alfworld/agents/environment/alfred_tw_env.py", line 107, in reset
+    self._handcoded_expert.reset(self.gamefile)
+  File "/workspace/llmrobot/.venv/lib/python3.12/site-packages/alfworld/agents/expert/handcoded_expert.py", line 551, in reset
+    with open(traj_data_file, 'r') as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'data/alfworld/json_2.1.1/train/pick_and_place_simple-AlarmClock-None-Desk-307/trial_T20190907_072303_146844/traj_data.json'

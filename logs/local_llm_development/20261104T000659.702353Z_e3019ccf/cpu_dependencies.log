@@ -1,0 +1,23 @@
+warning: The `UV_NATIVE_TLS` environment variable is deprecated and will be removed in a future release. Use `UV_SYSTEM_CERTS` instead.
+Using Python 3.12.14 environment at: local-llm-check
+Resolved 10 packages in 2.02s
+Downloading networkx (2.0MiB)
+Downloading sympy (5.9MiB)
+Downloading setuptools (1.2MiB)
+Downloading torch (170.3MiB)
+ Downloaded setuptools
+ Downloaded networkx
+ Downloaded sympy
+ Downloaded torch
+Prepared 10 packages in 9.98s
+Installed 10 packages in 309ms
+ + filelock==4.2.4
+ + fsspec==2026.9.0
+ + jinja2==3.1.6
+ + markupsafe==3.0.3
+ + mpmath==1.3.0
+ + networkx==3.7
+ + setuptools==78.1.0
+ + sympy==1.13.1
+ + torch==2.6.0+cpu
+ + typing-extensions==4.16.0

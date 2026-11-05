@@ -1,0 +1,11 @@
+{
+  "protected_source_and_raw_file_count": 42,
+  "pddl_archive_exact": true,
+  "requirements_archive_exact": true,
+  "changed_other_protected_files": [],
+  "intentional_changes": [
+    "collect_normal.py: thin router; original byte-preserved in collect_pddl.py",
+    "requirements.txt: documentation comments only; original archived in requirements-pddl.txt",
+    "README.md and .gitignore: local workflow documentation and exclusions"
+  ]
+}

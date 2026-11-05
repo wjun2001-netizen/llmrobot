@@ -1,0 +1,33 @@
+{
+  "source": "Official OpenAI Python SDK, retrieved from GitHub over verified HTTPS; not installed as a dependency",
+  "references": [
+    {
+      "url": "https://raw.githubusercontent.com/openai/openai-python/main/src/openai/types/responses/response_create_params.py",
+      "sha256": "ebaf13e93a42bb971307a5b4f8e11967a3cc033313ab0433365a95b9c1819544"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/openai/openai-python/main/src/openai/types/responses/response_output_text.py",
+      "sha256": "4a229e7f3b34f9e3b2c273ac107ce9b2127531dfb03c6af1329f3750c77c932b"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/openai/openai-python/main/src/openai/types/responses/response_includable.py",
+      "sha256": "2971eadc4b68158102ba419198051f63df7b31fe5605c1e63f60c9537c41fd04"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/openai/openai-python/main/src/openai/types/responses/response_text_config_param.py",
+      "sha256": "f517b4783d254eae94ebc9b2e4c7bb660e4d8ed20003bbbbb2f54487dc046aad"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/openai/openai-python/main/src/openai/types/responses/response.py",
+      "sha256": "b7f94706e91b9e0c7e857b74c0ea2430ec4f3a8f645833e9490d33d57f6b8ee0"
+    }
+  ],
+  "confirmed_protocol_fields": [
+    "include: message.output_text.logprobs",
+    "top_logprobs: integer 0..20",
+    "output[].content[].logprobs",
+    "text.format: Responses text configuration"
+  ],
+  "model_specific_support": "Unverified: OPENAI_API_KEY missing. SDK schema is not evidence of access or support for any particular model.",
+  "docs_website_access": "developers.openai.com and platform.openai.com returned proxy tunnel 403; official GitHub SDK used instead."
+}

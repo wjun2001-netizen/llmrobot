@@ -1,0 +1,14 @@
+GAME data/alfworld/json_2.1.1/train/pick_and_place_simple-AlarmClock-None-Desk-307/trial_T20190907_072303_146844/game.tw-pddl
+-= Welcome to TextWorld, ALFRED! =-
+
+You are in the middle of a room. Looking quickly around you, you see a bed 1, a desk 1, a drawer 3, a drawer 2, a drawer 1, a garbagecan 1, a laundryhamper 1, a shelf 2, a shelf 1, and a sidetable 1.
+
+Your task is to: put a alarmclock in desk.
+PLAN ['go to sidetable 1', 'take alarmclock 2 from sidetable 1', 'go to desk 1', 'move alarmclock 2 to desk 1']
+1 go to sidetable 1 0 False False You arrive at sidetable 1. On the sidetable 1, you see a alarmclock 3, a alarmclock 2, a alarmclock 1, a creditcard 1, a desklamp 1, a keychain 1, a pen 3, a pen 2, and a pencil 3.
+PLAN ['take alarmclock 2 from sidetable 1', 'go to desk 1', 'move alarmclock 2 to desk 1']
+2 take alarmclock 2 from sidetable 1 0 False False You pick up the alarmclock 2 from the sidetable 1.
+PLAN ['go to desk 1', 'move alarmclock 2 to desk 1']
+3 go to desk 1 0 False False You arrive at desk 1. On the desk 1, you see a book 2, a bowl 1, a cd 3, a pencil 2, a pencil 1, and a remotecontrol 1.
+PLAN ['move alarmclock 2 to desk 1']
+4 move alarmclock 2 to desk 1 1 True True You move the alarmclock 2 to the desk 1.

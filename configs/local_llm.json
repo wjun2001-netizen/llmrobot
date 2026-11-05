@@ -1,0 +1,11 @@
+{
+  "model_name": "Qwen/Qwen3-4B",
+  "revision": null,
+  "load_in_4bit": true,
+  "compute_dtype": "float16",
+  "device": "cuda:0",
+  "max_new_tokens": 256,
+  "max_context_tokens": 4096,
+  "enable_thinking": false,
+  "save_logits": false
+}

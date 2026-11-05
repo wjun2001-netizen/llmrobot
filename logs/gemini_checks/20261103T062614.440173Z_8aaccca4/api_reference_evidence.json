@@ -1,0 +1,14 @@
+{
+  "source_url": "https://raw.githubusercontent.com/googleapis/python-genai/main/google/genai/types.py",
+  "sha256": "1a435d319fb2cd9da117ab962433c53783c3e5ab71851762574700ec975a5350",
+  "fields_confirmed": [
+    "GenerateContentConfig.response_logprobs",
+    "GenerateContentConfig.logprobs",
+    "LogprobsResult.chosen_candidates",
+    "LogprobsResult.top_candidates",
+    "LogprobsResultCandidate.token",
+    "LogprobsResultCandidate.token_id",
+    "LogprobsResultCandidate.log_probability"
+  ],
+  "limitation": "SDK schema establishes protocol fields, not Developer API model-specific support, account billing tier, or actual token logprobs availability."
+}

@@ -1,0 +1,32 @@
+test_actual_logprobs_preserved_not_inferred (test_llm_pipeline.AgentTests.test_actual_logprobs_preserved_not_inferred) ... ok
+test_credentials_not_forwarded_by_redirect (test_llm_pipeline.AgentTests.test_credentials_not_forwarded_by_redirect) ... ok
+test_exclusive_file_creation (test_llm_pipeline.AgentTests.test_exclusive_file_creation) ... ok
+test_incomplete_and_refusal_never_execute (test_llm_pipeline.AgentTests.test_incomplete_and_refusal_never_execute) ... ok
+test_malformed_and_duplicate_json_never_repaired (test_llm_pipeline.AgentTests.test_malformed_and_duplicate_json_never_repaired) ... ok
+test_missing_key_blocks_before_network (test_llm_pipeline.AgentTests.test_missing_key_blocks_before_network) ... ok
+test_model_listing_does_not_imply_logprobs_support (test_llm_pipeline.AgentTests.test_model_listing_does_not_imply_logprobs_support) ... ok
+test_no_default_model (test_llm_pipeline.AgentTests.test_no_default_model) ... ok
+test_no_matching_or_expert_substitution (test_llm_pipeline.AgentTests.test_no_matching_or_expert_substitution) ... ok
+test_plan_and_action_untouched_inputs_limited (test_llm_pipeline.AgentTests.test_plan_and_action_untouched_inputs_limited) ... ok
+test_responses_payload_and_generated_enum (test_llm_pipeline.AgentTests.test_responses_payload_and_generated_enum) ... ok
+test_unavailable_plan_stays_null (test_llm_pipeline.AgentTests.test_unavailable_plan_stays_null) ... ok
+test_api_error_does_not_fabricate_step (test_llm_pipeline.RealEnvironmentFixtureTests.test_api_error_does_not_fabricate_step) ... /workspace/llmrobot/.venv/lib/python3.12/site-packages/textworld/envs/pddl/pddl.py:53: ResourceWarning: unclosed file <_io.TextIOWrapper name='/workspace/llmrobot/data/alfworld/json_2.1.1/train/pick_and_place_simple-Watch-None-Shelf-207/trial_T20190908_122239_644484/game.tw-pddl' mode='r' encoding='UTF-8'>
+  data = json.load(open(filename_or_data))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+ok
+test_environment_does_not_expose_expert_plan (test_llm_pipeline.RealEnvironmentFixtureTests.test_environment_does_not_expose_expert_plan) ... ok
+test_failed_episode_preserved_and_history_correct (test_llm_pipeline.RealEnvironmentFixtureTests.test_failed_episode_preserved_and_history_correct) ... ok
+test_invalid_output_saved_without_environment_step (test_llm_pipeline.RealEnvironmentFixtureTests.test_invalid_output_saved_without_environment_step) ... ok
+test_empty_observation_and_action (test_validation.ValidationTests.test_empty_observation_and_action) ... ok
+test_empty_run (test_validation.ValidationTests.test_empty_run) ... ok
+test_failed_terminal (test_validation.ValidationTests.test_failed_terminal) ... ok
+test_genuine_run (test_validation.ValidationTests.test_genuine_run) ... ok
+test_missing_field (test_validation.ValidationTests.test_missing_field) ... ok
+test_missing_success_not_replaced_with_false (test_validation.ValidationTests.test_missing_success_not_replaced_with_false) ... ok
+test_step_gap (test_validation.ValidationTests.test_step_gap) ... ok
+test_wrong_episode_count (test_validation.ValidationTests.test_wrong_episode_count) ... ok
+
+----------------------------------------------------------------------
+Ran 24 tests in 2.528s
+
+OK

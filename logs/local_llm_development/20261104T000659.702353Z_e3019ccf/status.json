@@ -1,0 +1,20 @@
+{
+  "implementation_complete": true,
+  "default_candidate": "Qwen/Qwen3-4B",
+  "pretrained_model_downloaded": false,
+  "cuda_execution_attempted": false,
+  "bitsandbytes_gpu_runtime_verified": false,
+  "actual_alfworld_episodes_executed": 0,
+  "actual_local_llm_trajectories_generated": 0,
+  "validation_environment": "Separate CPU-only /workspace/local-llm-check; baseline .venv unchanged",
+  "local_unit_tests_passed": 23,
+  "existing_validator_unit_tests_passed": 8,
+  "total_unit_tests_passed": 31,
+  "legacy_alfworld_integration_suites_run": false,
+  "model_and_cuda_loaders_mocked": true,
+  "full_vocab_entropy_unit": "nats",
+  "raw_logits_default_saved": false,
+  "pddl_source_archive": "collect_pddl.py",
+  "original_requirements_archive": "requirements-pddl.txt",
+  "actual_nvidia_readiness": "Must verify locally: driver/CUDA PyTorch, bitsandbytes, model loading, VRAM/context budget, single episode and JSONL validation before five episodes"
+}

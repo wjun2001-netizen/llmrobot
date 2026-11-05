@@ -1,0 +1,11 @@
+{
+  "baseline_files_checked": 31,
+  "changed_baseline_files": [],
+  "OPENAI_API_KEY_present": false,
+  "real_openai_calls": 0,
+  "real_llm_episodes": 0,
+  "model_selected": null,
+  "mean_steps": null,
+  "tests_passed": 26,
+  "note": "Fixture tests are excluded from actual OpenAI and LLM episode counts."
+}

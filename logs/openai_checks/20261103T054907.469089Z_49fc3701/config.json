@@ -1,0 +1,11 @@
+{
+  "provider": "OpenAI",
+  "api": "Responses",
+  "endpoint": "https://api.openai.com/v1/responses",
+  "requested_model": "gpt-4.1-mini-2025-04-14",
+  "api_key_present": true,
+  "timeout_seconds": 60.0,
+  "top_logprobs": 5,
+  "max_output_tokens": 512,
+  "sampling_note": "No unsupported seed/temperature options injected. Environment seed does not guarantee API determinism."
+}

@@ -1,0 +1,10 @@
+{
+  "status": "blocked",
+  "error_type": "GeminiAPIError",
+  "reason": "Gemini network/proxy connection failed or timed out; key and HTTP details omitted",
+  "http_status": null,
+  "google_status": null,
+  "required_environment_variables": [],
+  "requested_model": null,
+  "episodes_executed": 0
+}

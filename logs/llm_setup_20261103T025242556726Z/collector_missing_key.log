@@ -1,0 +1,4 @@
+RUN_DIR=/workspace/llmrobot/runs_llm/20261103T030310.825180Z_e58d7e88
+BLOCKED {"status": "blocked_before_episodes", "reason": "OPENAI_API_KEY is required; no API calls or LLM episodes were executed", "error_type": "ConfigurationError", "llm_episodes_executed": 0, "success_count": 0, "failure_count": 0, "mean_steps": null, "model_name": null, "required_environment_variables": ["OPENAI_API_KEY"]}
+
+EXIT_CODE=2

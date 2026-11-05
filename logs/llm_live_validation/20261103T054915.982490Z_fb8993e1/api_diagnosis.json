@@ -1,0 +1,7 @@
+{
+  "http_status": 429,
+  "error_code": "unrecognized_or_missing",
+  "error_type": "insufficient_quota",
+  "retry_after_present": false,
+  "note": "No error message, headers, API key or raw error body persisted."
+}

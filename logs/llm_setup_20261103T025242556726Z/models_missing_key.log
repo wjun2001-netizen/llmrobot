@@ -1,0 +1,11 @@
+CHECK_DIR=/workspace/llmrobot/logs/openai_checks/20261103T030310.752826Z_e8276b00
+{
+  "status": "blocked",
+  "error_type": "ConfigurationError",
+  "reason": "OPENAI_API_KEY is required; no API calls or LLM episodes were executed",
+  "required_environment_variable": "OPENAI_API_KEY",
+  "selected_model": null,
+  "llm_episodes_executed": 0
+}
+
+EXIT_CODE=2

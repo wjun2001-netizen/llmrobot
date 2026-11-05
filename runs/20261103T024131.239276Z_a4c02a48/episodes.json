@@ -1,0 +1,42 @@
+[
+  {
+    "episode_id": "train/pick_and_place_simple-Watch-None-Shelf-207/trial_T20190908_122239_644484",
+    "steps": 3,
+    "success": true,
+    "done": true,
+    "truncated": false,
+    "error": null
+  },
+  {
+    "episode_id": "train/pick_and_place_simple-Watch-None-Shelf-207/trial_T20190908_122255_167374",
+    "steps": 3,
+    "success": true,
+    "done": true,
+    "truncated": false,
+    "error": null
+  },
+  {
+    "episode_id": "train/pick_and_place_simple-KeyChain-None-Desk-304/trial_T20190907_192658_005358",
+    "steps": 3,
+    "success": true,
+    "done": true,
+    "truncated": false,
+    "error": null
+  },
+  {
+    "episode_id": "train/pick_and_place_simple-RemoteControl-None-CoffeeTable-209/trial_T20190909_062307_151182",
+    "steps": 4,
+    "success": true,
+    "done": true,
+    "truncated": false,
+    "error": null
+  },
+  {
+    "episode_id": "train/pick_and_place_simple-Statue-None-CoffeeTable-230/trial_T20190909_145138_877153",
+    "steps": 4,
+    "success": true,
+    "done": true,
+    "truncated": false,
+    "error": null
+  }
+]

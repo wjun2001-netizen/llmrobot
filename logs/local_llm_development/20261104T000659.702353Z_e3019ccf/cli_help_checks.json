@@ -1,0 +1,22 @@
+[
+  {
+    "backend": "pddl",
+    "exit_code": 0,
+    "help_mentions_backend_selector": true
+  },
+  {
+    "backend": "openai",
+    "exit_code": 0,
+    "help_mentions_backend_selector": true
+  },
+  {
+    "backend": "gemini",
+    "exit_code": 0,
+    "help_mentions_backend_selector": true
+  },
+  {
+    "backend": "local",
+    "exit_code": 0,
+    "help_mentions_backend_selector": true
+  }
+]

@@ -1,0 +1,23 @@
+{
+  "valid": true,
+  "episode_count": 1,
+  "transition_count": 3,
+  "success_count": 1,
+  "failure_count": 0,
+  "episodes": [
+    {
+      "episode_id": "train/pick_and_place_simple-Watch-None-Shelf-207/trial_T20190908_122239_644484",
+      "steps": 3,
+      "outcome": "success",
+      "terminal_done": true,
+      "terminal_success": true,
+      "success_values_recorded": true
+    }
+  ],
+  "missing_fields": [],
+  "null_counts": {},
+  "empty_observation_count": 0,
+  "empty_action_count": 0,
+  "errors": [],
+  "episode_errors": []
+}

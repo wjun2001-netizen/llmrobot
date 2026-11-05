@@ -1,0 +1,36 @@
+{
+  "environment_variable_presence": {
+    "LLM_BASE_URL": "missing",
+    "LLM_MODEL": "missing",
+    "LLM_API_KEY": "missing",
+    "OPENAI_API_KEY": "missing",
+    "OPENAI_BASE_URL": "missing",
+    "OPENAI_MODEL": "missing",
+    "ANTHROPIC_API_KEY": "missing",
+    "GEMINI_API_KEY": "missing",
+    "GOOGLE_API_KEY": "missing",
+    "AZURE_OPENAI_API_KEY": "missing",
+    "AZURE_OPENAI_ENDPOINT": "missing",
+    "AZURE_OPENAI_DEPLOYMENT": "missing",
+    "HF_TOKEN": "missing",
+    "HUGGINGFACEHUB_API_TOKEN": "missing",
+    "OLLAMA_HOST": "missing"
+  },
+  "venv_modules": {
+    "openai": false,
+    "anthropic": false,
+    "transformers": false,
+    "torch": false,
+    "ollama": false,
+    "litellm": false
+  },
+  "runtime_commands": {
+    "ollama": false,
+    "vllm": false,
+    "nvidia-smi": false
+  },
+  "configured_secret_bindings": 0,
+  "available_inference_connector": false,
+  "llm_episode_runs": 0,
+  "note": "Codex task runtime is not a configured project inference API; no internal credentials used."
+}

@@ -1,0 +1,54 @@
+{
+  "run_id": "20261103T024116.740268Z_a9a6d73d",
+  "schema_version": 1,
+  "command": [
+    "collect_normal.py",
+    "--episodes",
+    "1",
+    "--seed",
+    "42"
+  ],
+  "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+  "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "versions": {
+    "alfworld": "0.4.2",
+    "textworld": "1.7.0",
+    "fast-downward-textworld": "20.6.4",
+    "numpy": "2.5.4"
+  },
+  "seed": 42,
+  "episodes": 1,
+  "max_steps": 50,
+  "split": "train",
+  "task_type": "pick_and_place_simple",
+  "data_dir": "/workspace/llmrobot/data/alfworld",
+  "selection": "shortest stored walkthrough; seeded tie-breaking; distinct game files",
+  "agent": "ALFWorld AlfredExpert(planner), privileged symbolic expert; not an LLM",
+  "selected_games": [
+    {
+      "gamefile": "json_2.1.1/train/pick_and_place_simple-Watch-None-Shelf-207/trial_T20190908_122239_644484/game.tw-pddl",
+      "sha256": "88c28a8bd376805eb1832c05cb758c724a45f7a9173db2e5e8856a4f6d9ff916",
+      "metadata_sha256": "fb6783ee931d45976cd6c59b68d2754e33e566460edeb34c099cc506e21c6db5",
+      "episode_seed": 42
+    }
+  ],
+  "collector_sha256": "c454f1cce66a569c431f6c2558f4f5b48daaa4aeeded3252deec761fb9d9c86d",
+  "field_timing": "observation/plan/action/admissible_actions before action; reward/done/success after action",
+  "success_source": "post-action TextWorld state.won, not inferred from reward",
+  "goal_source": "exact task text extracted from reset feedback; null if unavailable",
+  "reward_source": "unmodified env.step return (PDDL score, binary 0/1 here)",
+  "plan_source": "pre-action extra.expert_plan; not LLM reasoning",
+  "missing_value_policy": "unavailable values are JSON null",
+  "dataset_manifest": [
+    {
+      "url": "https://github.com/alfworld/alfworld/releases/download/0.2.2/json_2.1.1_json.zip",
+      "sha256": "25171f16e20ad7b048c47275c45b0babf3aa1cbab29cec97387922350a9844bc",
+      "archive": "json_2.1.1_json.zip"
+    },
+    {
+      "url": "https://github.com/alfworld/alfworld/releases/download/0.4.0/json_2.1.2_tw-pddl.zip",
+      "sha256": "eea90499df27b9cb3147d1d1927264146d38194b575e25f70a82875545742dcb",
+      "archive": "json_2.1.2_tw-pddl.zip"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+[
+  {
+    "episode_id": "train/pick_and_place_simple-Watch-None-Shelf-207/trial_T20190908_122239_644484",
+    "steps": 3,
+    "success": true,
+    "done": true,
+    "truncated": false,
+    "error": null
+  }
+]

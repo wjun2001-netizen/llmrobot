@@ -1,0 +1,7 @@
+.venv/
+.venv-local/
+.cache/
+__pycache__/
+*.pyc
+data/alfworld/
+runs_local/**/logits/

@@ -1,0 +1,8 @@
+{
+  "status": "blocked",
+  "error_type": "APIError",
+  "reason": "OpenAI returned HTTP 429; error body omitted",
+  "required_environment_variables": [],
+  "selected_model": "gpt-4.1-mini-2025-04-14",
+  "llm_episodes_executed": 0
+}

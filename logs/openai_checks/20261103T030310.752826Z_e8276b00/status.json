@@ -1,0 +1,8 @@
+{
+  "status": "blocked",
+  "error_type": "ConfigurationError",
+  "reason": "OPENAI_API_KEY is required; no API calls or LLM episodes were executed",
+  "required_environment_variable": "OPENAI_API_KEY",
+  "selected_model": null,
+  "llm_episodes_executed": 0
+}

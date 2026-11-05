@@ -1,0 +1,13 @@
+test_empty_observation_and_action (test_validation.ValidationTests.test_empty_observation_and_action) ... ok
+test_empty_run (test_validation.ValidationTests.test_empty_run) ... ok
+test_failed_terminal (test_validation.ValidationTests.test_failed_terminal) ... ok
+test_genuine_run (test_validation.ValidationTests.test_genuine_run) ... ok
+test_missing_field (test_validation.ValidationTests.test_missing_field) ... ok
+test_missing_success_not_replaced_with_false (test_validation.ValidationTests.test_missing_success_not_replaced_with_false) ... ok
+test_step_gap (test_validation.ValidationTests.test_step_gap) ... ok
+test_wrong_episode_count (test_validation.ValidationTests.test_wrong_episode_count) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.004s
+
+OK

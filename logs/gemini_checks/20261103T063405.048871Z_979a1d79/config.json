@@ -1,0 +1,13 @@
+{
+  "provider": "Google Gemini Developer API",
+  "api_base": "https://generativelanguage.googleapis.com/v1beta",
+  "requested_model": null,
+  "api_key_present": true,
+  "responseLogprobs": true,
+  "logprobs": 5,
+  "maxOutputTokens": 1024,
+  "timeout_seconds": 60,
+  "request_interval_seconds": 13,
+  "billing_tier": null,
+  "billing_note": "API success does not prove free-tier billing; verify account tier in Google AI Studio."
+}
