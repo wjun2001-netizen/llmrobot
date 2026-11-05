@@ -1,0 +1,28 @@
+test_cli_prints_class_counts_without_training (test_lstm_windows.FileTests.test_cli_prints_class_counts_without_training) ... ok
+test_csv_output_counts_metadata_and_read_only_input (test_lstm_windows.FileTests.test_csv_output_counts_metadata_and_read_only_input) ... ok
+test_derived_output_not_overwritten_unless_requested (test_lstm_windows.FileTests.test_derived_output_not_overwritten_unless_requested) ... ok
+test_input_cannot_be_its_own_output_even_with_overwrite (test_lstm_windows.FileTests.test_input_cannot_be_its_own_output_even_with_overwrite) ... ok
+test_input_hardlink_cannot_be_truncated_by_sidecar (test_lstm_windows.FileTests.test_input_hardlink_cannot_be_truncated_by_sidecar) ... ok
+test_pair_json_baseline_exclusion_without_source_csv_changes (test_lstm_windows.FileTests.test_pair_json_baseline_exclusion_without_source_csv_changes) ... ok
+test_short_fixture_yields_zero_counts_and_header_only_csv (test_lstm_windows.FileTests.test_short_fixture_yields_zero_counts_and_header_only_csv) ... ok
+test_csv_comparison_can_exclude_both_conditions (test_lstm_windows.WindowTests.test_csv_comparison_can_exclude_both_conditions) ... ok
+test_end_policy_is_explicit_alternative (test_lstm_windows.WindowTests.test_end_policy_is_explicit_alternative) ... ok
+test_fault_failure_labels_only_fully_post_injection (test_lstm_windows.WindowTests.test_fault_failure_labels_only_fully_post_injection) ... ok
+test_gap_never_bridged (test_lstm_windows.WindowTests.test_gap_never_bridged) ... ok
+test_invalid_window_size (test_lstm_windows.WindowTests.test_invalid_window_size) ... ok
+test_length_five_stride_one_and_feature_order (test_lstm_windows.WindowTests.test_length_five_stride_one_and_feature_order) ... ok
+test_missing_comparison_is_error_when_exclusion_requested (test_lstm_windows.WindowTests.test_missing_comparison_is_error_when_exclusion_requested) ... ok
+test_nan_missing_and_inf_block_windows_without_bridging (test_lstm_windows.WindowTests.test_nan_missing_and_inf_block_windows_without_bridging) ... ok
+test_no_cross_episode_condition_or_run_windows (test_lstm_windows.WindowTests.test_no_cross_episode_condition_or_run_windows) ... ok
+test_no_fault_failure_positive_requires_explicit_override (test_lstm_windows.WindowTests.test_no_fault_failure_positive_requires_explicit_override) ... ok
+test_no_fault_failures_excluded_by_default_user_choice (test_lstm_windows.WindowTests.test_no_fault_failures_excluded_by_default_user_choice) ... ok
+test_pre_injection_and_unreached_failure_windows_negative (test_lstm_windows.WindowTests.test_pre_injection_and_unreached_failure_windows_negative) ... ok
+test_repeated_ids_across_runs_are_separate_samples (test_lstm_windows.WindowTests.test_repeated_ids_across_runs_are_separate_samples) ... ok
+test_reversed_duplicate_and_inconsistent_outcome_rejected (test_lstm_windows.WindowTests.test_reversed_duplicate_and_inconsistent_outcome_rejected) ... ok
+test_success_trajectories_always_negative (test_lstm_windows.WindowTests.test_success_trajectories_always_negative) ... ok
+test_unlabelable_runtime_failure_is_excluded_not_negative (test_lstm_windows.WindowTests.test_unlabelable_runtime_failure_is_excluded_not_negative) ... ok
+
+----------------------------------------------------------------------
+Ran 23 tests in 0.117s
+
+OK

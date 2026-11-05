@@ -1,0 +1,16 @@
+{
+  "input_feature_and_existing_logs_checked": 111,
+  "changed_input_or_log_files": [],
+  "window_unit_tests_passed": 26,
+  "existing_feature_tests_passed": 18,
+  "existing_local_tests_passed": 29,
+  "existing_fault_tests_passed": 22,
+  "total_tests_passed": 95,
+  "new_runtime_dependencies": false,
+  "model_training_run": false,
+  "train_test_split": false,
+  "no_fault_failure_default": "exclude (explicit user selection)",
+  "default_post_injection_policy": "all window steps at/after injection_step",
+  "actual_research_timeseries_available_in_cloud": false,
+  "actual_training_windows_fabricated": false
+}
