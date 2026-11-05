@@ -1,0 +1,31 @@
+test_both_conditions_step_order_and_original_files_unchanged (test_timeseries_features.ExtractionTests.test_both_conditions_step_order_and_original_files_unchanged) ... /workspace/llmrobot/tests/test_timeseries_features.py:191: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/tmpi2wzub5s/features/timeseries.csv' mode='r' encoding='UTF-8'>
+  rows = list(csv.DictReader(output.open()))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+ok
+test_existing_derived_output_not_replaced_by_default (test_timeseries_features.ExtractionTests.test_existing_derived_output_not_replaced_by_default) ... ok
+test_missing_fault_input_provenance_not_replaced_by_true_inputs (test_timeseries_features.ExtractionTests.test_missing_fault_input_provenance_not_replaced_by_true_inputs) ... ok
+test_missing_plan_and_nan_entropy_fail_without_csv (test_timeseries_features.ExtractionTests.test_missing_plan_and_nan_entropy_fail_without_csv) ... ok
+test_multiple_run_directories (test_timeseries_features.ExtractionTests.test_multiple_run_directories) ... ok
+test_no_real_runs_does_not_load_any_embedding_or_tokenizer (test_timeseries_features.ExtractionTests.test_no_real_runs_does_not_load_any_embedding_or_tokenizer) ... ok
+test_reversed_steps_rejected_not_silently_sorted (test_timeseries_features.ExtractionTests.test_reversed_steps_rejected_not_silently_sorted) ... ok
+test_skip_invalid_is_explicit_reported_and_not_renumbered (test_timeseries_features.ExtractionTests.test_skip_invalid_is_explicit_reported_and_not_renumbered) ... /workspace/llmrobot/tests/test_timeseries_features.py:228: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/tmp7ag7ufyz/out.csv' mode='r' encoding='UTF-8'>
+  self.assertEqual([int(row["step"]) for row in csv.DictReader(output.open()) if row["condition"] == "no_fault"], [1, 3])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+ok
+test_source_can_never_be_overwrite_destination (test_timeseries_features.ExtractionTests.test_source_can_never_be_overwrite_destination) ... ok
+test_cosine_is_not_exact_match_or_hamming_and_retains_negative_values (test_timeseries_features.MathTests.test_cosine_is_not_exact_match_or_hamming_and_retains_negative_values) ... ok
+test_missing_nonfinite_or_zero_embeddings_fail (test_timeseries_features.MathTests.test_missing_nonfinite_or_zero_embeddings_fail) ... ok
+test_sentence_encoder_is_called_with_real_text_and_batched (test_timeseries_features.MathTests.test_sentence_encoder_is_called_with_real_text_and_batched) ... ok
+test_context_load_changes_with_observation_without_changing_history_count (test_timeseries_features.PromptTests.test_context_load_changes_with_observation_without_changing_history_count) ... ok
+test_count_nan_and_context_budget_conflict_fail (test_timeseries_features.PromptTests.test_count_nan_and_context_budget_conflict_fail) ... ok
+test_fault_prompt_uses_agent_inputs_original_action_order_and_template (test_timeseries_features.PromptTests.test_fault_prompt_uses_agent_inputs_original_action_order_and_template) ... /workspace/llmrobot/tests/test_timeseries_features.py:136: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/tmptx5muxz7/out.csv' mode='r' encoding='UTF-8'>
+  rows = list(csv.DictReader(output.open()))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+ok
+test_observed_counts_need_no_tokenizer_loading (test_timeseries_features.PromptTests.test_observed_counts_need_no_tokenizer_loading) ... ok
+test_unknown_history_and_revision_are_not_guessed (test_timeseries_features.PromptTests.test_unknown_history_and_revision_are_not_guessed) ... ok
+
+----------------------------------------------------------------------
+Ran 17 tests in 0.238s
+
+OK

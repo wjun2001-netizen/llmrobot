@@ -1,0 +1,19 @@
+warning: The `UV_NATIVE_TLS` environment variable is deprecated and will be removed in a future release. Use `UV_SYSTEM_CERTS` instead.
+Using Python 3.12.14 environment at: local-llm-check
+Resolved 33 packages in 1.62s
+Downloading scipy (33.7MiB)
+Downloading pillow (6.8MiB)
+Downloading scikit-learn (8.7MiB)
+ Downloaded scikit-learn
+ Downloaded pillow
+ Downloaded scipy
+Prepared 8 packages in 3.66s
+Installed 8 packages in 57ms
+ + cloudpickle==3.1.2
+ + joblib==1.6.0
+ + narwhals==2.28.0
+ + pillow==13.0.0
+ + scikit-learn==1.9.1
+ + scipy==1.18.1
+ + sentence-transformers==5.1.2
+ + threadpoolctl==3.8.0

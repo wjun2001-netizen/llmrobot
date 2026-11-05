@@ -224,6 +224,8 @@ class LocalLLMAgent:
         record = {"raw_text": self.tokenizer.decode(token_ids, skip_special_tokens=True),
                   "generated_token_ids": token_ids, "token_entropies": entropies, "mean_entropy": mean,
                   "score_vocab_size": vocab_size, "entropy_unit": "nats", "entropy_source": "generate.scores, fresh unfiltered greedy config",
+                  "prompt_token_count": prompt_length, "max_context_tokens": self.config.max_context_tokens,
+                  "effective_context_limit": context_limit,
                   "eos_included": bool(token_ids and token_ids[-1] in (eos if isinstance(eos, list) else [eos])),
                   "generation_limit_reached": len(token_ids) >= self.config.max_new_tokens and not (token_ids and token_ids[-1] in (eos if isinstance(eos, list) else [eos])),
                   "resolved_revision": getattr(self.model.config, "_commit_hash", None), "logits_file": None}

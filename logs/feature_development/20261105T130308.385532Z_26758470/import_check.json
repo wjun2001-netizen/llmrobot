@@ -1,0 +1,9 @@
+{
+  "sentence_transformers": "5.1.2",
+  "torch": "2.6.0+cpu",
+  "transformers": "4.57.6",
+  "sentence_transformer_import_verified": true,
+  "pretrained_models_downloaded": false,
+  "real_model_inference_run": false,
+  "gpu_execution_attempted": false
+}

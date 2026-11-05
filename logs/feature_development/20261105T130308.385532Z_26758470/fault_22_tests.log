@@ -1,0 +1,27 @@
+test_admissible_actions_history_and_model_config_unchanged (test_fault_injection.BoundaryTests.test_admissible_actions_history_and_model_config_unchanged) ... ok
+test_invalid_faulted_attempt_preserves_metadata_without_fake_transition (test_fault_injection.BoundaryTests.test_invalid_faulted_attempt_preserves_metadata_without_fake_transition) ... ok
+test_metadata_logged_and_true_environment_goal_not_changed (test_fault_injection.BoundaryTests.test_metadata_logged_and_true_environment_goal_not_changed) ... ok
+test_reject_mutating_agent_without_mutating_original_actions (test_fault_injection.BoundaryTests.test_reject_mutating_agent_without_mutating_original_actions) ... ok
+test_cli_dispatch_mock_only (test_fault_injection.CliTests.test_cli_dispatch_mock_only) ... ok
+test_fixed_game_and_episode_id_selection (test_fault_injection.CliTests.test_fixed_game_and_episode_id_selection) ... ok
+test_single_condition_auto_reference_is_labeled_and_not_sent_as_plan (test_fault_injection.CliTests.test_single_condition_auto_reference_is_labeled_and_not_sent_as_plan) ... ok
+test_before_injection_inputs_unchanged (test_fault_injection.InjectorTests.test_before_injection_inputs_unchanged) ... ok
+test_context_overload_severity_and_actual_counts (test_fault_injection.InjectorTests.test_context_overload_severity_and_actual_counts) ... ok
+test_deterministic_and_does_not_advance_global_rng (test_fault_injection.InjectorTests.test_deterministic_and_does_not_advance_global_rng) ... ok
+test_goal_drift_applies_and_original_stable (test_fault_injection.InjectorTests.test_goal_drift_applies_and_original_stable) ... ok
+test_high_goal_drift_can_change_object_and_receptacle (test_fault_injection.InjectorTests.test_high_goal_drift_can_change_object_and_receptacle) ... ok
+test_no_tokenizer_never_invents_token_count (test_fault_injection.InjectorTests.test_no_tokenizer_never_invents_token_count) ... ok
+test_observation_fallback_removes_span_deterministically (test_fault_injection.InjectorTests.test_observation_fallback_removes_span_deterministically) ... ok
+test_observation_loss_preserves_original (test_fault_injection.InjectorTests.test_observation_loss_preserves_original) ... ok
+test_timing_sources_and_early_episode_case (test_fault_injection.InjectorTests.test_timing_sources_and_early_episode_case) ... ok
+test_unavailable_original_inputs_stay_unavailable (test_fault_injection.InjectorTests.test_unavailable_original_inputs_stay_unavailable) ... ok
+test_baseline_failures_not_claimed_as_fault_caused (test_fault_injection.PairedTests.test_baseline_failures_not_claimed_as_fault_caused) ... ok
+test_early_completion_records_fault_not_reached (test_fault_injection.PairedTests.test_early_completion_records_fault_not_reached) ... ok
+test_no_fault_only_does_not_transform_inputs (test_fault_injection.PairedTests.test_no_fault_only_does_not_transform_inputs) ... ok
+test_paired_same_game_seed_and_midpoint_from_real_baseline (test_fault_injection.PairedTests.test_paired_same_game_seed_and_midpoint_from_real_baseline) ... ok
+test_pre_injection_divergence_not_claimed_as_fault_effect (test_fault_injection.PairedTests.test_pre_injection_divergence_not_claimed_as_fault_effect) ... ok
+
+----------------------------------------------------------------------
+Ran 22 tests in 0.245s
+
+OK

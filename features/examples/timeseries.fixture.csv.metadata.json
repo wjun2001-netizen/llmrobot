@@ -1,0 +1,33 @@
+{
+  "rows": 5,
+  "source_files": {
+    "/tmp/timeseries-unit-fixture-b_l7an_x/fixture_run/episodes/0000/no_fault/trajectories.jsonl": "74fb3e323f8d850af16dbb32b6ceb5978883639b0ad11f4a8382acaca358730a",
+    "/tmp/timeseries-unit-fixture-b_l7an_x/fixture_run/episodes/0000/fault/trajectories.jsonl": "60d21f8fa6ace51f1740d97b51e729be96b736f8dd2a38acbca6efd6cf194696"
+  },
+  "source_metadata_files": {
+    "/tmp/timeseries-unit-fixture-b_l7an_x/fixture_run/config.json": "a40fb90051a6294ba5f80b25b12552444c3a19bead55a760f991362b7d93af71",
+    "/tmp/timeseries-unit-fixture-b_l7an_x/fixture_run/episodes/0000/no_fault/episodes.json": "05bbedd60cf62a47189833e87b1fc882dd7d1004028fef387271b32c990b2ffb",
+    "/tmp/timeseries-unit-fixture-b_l7an_x/fixture_run/model_info.json": "1749f872903ad36d17c5029b6520fb7deba914dfafc5bf76bb9d5ae56b6eec62",
+    "/tmp/timeseries-unit-fixture-b_l7an_x/fixture_run/episodes/0000/fault/episodes.json": "eab737dc1383e73a2847fc9754de1d2a3ba27111fcc6c3e42c22d3dc4b5ee081",
+    "/tmp/timeseries-unit-fixture-b_l7an_x/fixture_run/episodes/0000/fault/config.json": "baf8393d8c59e204050d3e03a9c7ea08515d6ab8a5f5eb3b5ba00bca9d81f7de",
+    "/tmp/timeseries-unit-fixture-b_l7an_x/fixture_run/episodes/0000/no_fault/config.json": "6422f63d93112fd2a671c71b05f90bd71ba7281449ea5ecc257de7b672275134"
+  },
+  "validation_errors": [],
+  "skipped_invalid": false,
+  "source_trajectories_unchanged": true,
+  "data_kind": "unit_test_fixture",
+  "E_unit": "nats",
+  "C_definition": "actual input prompt tokens / configured max_context_tokens",
+  "S_definition": "sentence-transformer cosine(original episode initial goal, step plan), unchanged cosine",
+  "similarity_model": "fixture/embedding-vectors",
+  "similarity_revision": null,
+  "similarity_max_seq_length": 256,
+  "nullable_columns": [
+    "fault_severity",
+    "injection_step",
+    "tokenizer_revision"
+  ],
+  "prompt_count_sources": {
+    "reconstructed_verified_source": 5
+  }
+}

@@ -3,6 +3,8 @@
 현재 연구 실행 backend는 **로컬 Hugging Face causal LLM**입니다.
 [로컬 NVIDIA 설치·실행 및 entropy 정의](docs/LOCAL_LLM.md)를 먼저 참고하세요.
 이번 단계의 입력 경계 runtime fault 데이터 수집은 별도 [fault collector 지침](docs/FAULT_COLLECTION.md)을 참고하세요. 정상 collector/agent는 변경하지 않으며 LSTM·feature classifier·intervention은 구현하지 않았습니다.
+수집 후 [E/C/S feature 추출 지침](docs/TIMESERIES_FEATURES.md)에 따라 `python extract_timeseries.py --runs-dir runs_fault --output features/timeseries.csv`로 CPU 기반 시계열 CSV를 생성할 수 있습니다. 기존 trajectory는 변경하지 않습니다.
+새 local 로그에는 실제 tokenize 직후의 prompt_token_count/max_context_tokens 계측 metadata만 추가했으며 generation/entropy 계산은 그대로입니다.
 PDDL 본문은 `collect_pddl.py`에 원본 그대로 보존했고, `collect_normal.py`는 기본 `pddl`을 유지하는 backend 라우터입니다.
 OpenAI/Gemini 코드와 기존 로그는 변경하지 않았습니다. 아래 기존 API/baseline 결과는 이전 단계의 기록입니다.
 

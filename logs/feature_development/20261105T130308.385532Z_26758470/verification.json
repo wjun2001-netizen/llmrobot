@@ -1,0 +1,18 @@
+{
+  "existing_raw_and_log_files_checked": 95,
+  "changed_raw_or_log_files": [],
+  "entropy_function_unchanged": true,
+  "model_generate_call_unchanged": true,
+  "feature_unit_tests_passed": 18,
+  "existing_local_unit_tests_passed": 29,
+  "fault_unit_tests_passed": 22,
+  "total_tests_passed": 69,
+  "actual_runs_fault_found_in_cloud": false,
+  "default_research_csv_generated": false,
+  "fixture_example_csv": "features/examples/timeseries.fixture.csv",
+  "fixture_rows": 5,
+  "real_qwen_or_alfworld_run": false,
+  "gpu_execution_attempted": false,
+  "pretrained_embedding_or_tokenizer_artifacts_downloaded": false,
+  "sentence_transformers_import_verified": true
+}

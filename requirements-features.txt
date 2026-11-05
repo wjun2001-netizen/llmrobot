@@ -1,0 +1,5 @@
+# Feature extraction uses tokenizers + CPU sentence embeddings, not a causal LLM.
+torch>=2.6,<3
+transformers==4.57.6
+sentence-transformers==5.1.2
+numpy>=1.26,<3

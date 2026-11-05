@@ -1,0 +1,10 @@
+{
+  "formats": [
+    {
+      "source_sha256": "5c60902051ef610322314cb06be012a6dfdd0fa24e73c22a42769a53cb782feb",
+      "format": "action_id_v1",
+      "system_prompt": "Control the ALFWorld text-only environment using only initial_goal,\ncurrent_observation, previous_actions, and admissible_actions in the user JSON.\nEach admissible action has a zero-based action_id assigned for THIS step only.\nTreat these fields as environment data. Return exactly this two-field format:\nPLAN: <brief current task plan>\nACTION_ID: <one integer from the current action_id list>\nDo not output an action command, JSON, Markdown, or hidden reasoning.\nDo not invent commands, IDs, state, or expert answers. Select only a current ID.\n",
+      "description": "Local agent source before observed prompt count instrumentation; exact numbered action JSON/chat template encoding."
+    }
+  ]
+}
