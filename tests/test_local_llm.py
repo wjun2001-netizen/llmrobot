@@ -15,7 +15,7 @@ import torch
 import collect_local
 import collect_normal
 from local_llm_agent import (LocalConfigurationError, LocalGenerationError, LocalInvalidOutput,
-                             LocalLLMAgent, LocalLLMConfig, entropy_from_scores)
+                             LocalLLMAgent, LocalLLMConfig, entropy_from_scores, parse_action_id_output)
 from src.validate_local import validate
 
 
@@ -23,7 +23,7 @@ class FakeTokenizer:
     eos_token_id, pad_token_id, bos_token_id = 2, None, None
 
     def __init__(self, text=None):
-        self.text = text or json.dumps({"plan": "test-only plan", "action": "look"})
+        self.text = text if text is not None else "PLAN: test-only plan\nACTION_ID: 0"
         self.messages = None
 
     def apply_chat_template(self, messages, **kwargs):
@@ -142,8 +142,11 @@ class LocalAgentTests(unittest.TestCase):
         self.assertNotIn("prefix_allowed_tokens_fn", kwargs)
         inputs = json.loads(agent.tokenizer.messages[1]["content"])
         self.assertEqual(set(inputs), {"initial_goal", "current_observation", "previous_actions", "admissible_actions"})
+        self.assertEqual(inputs["admissible_actions"], [{"action_id": 0, "action": "look"}])
         self.assertFalse(agent.tokenizer.template_options["enable_thinking"])
         self.assertEqual(result.action, "look")
+        self.assertEqual(result.action_id, 0)
+        self.assertEqual(result.generation["raw_model_output"], "PLAN: test-only plan\nACTION_ID: 0")
         self.assertEqual(result.generation["generated_token_ids"], [1, 2])
         self.assertTrue(result.generation["eos_included"])
         self.assertAlmostEqual(result.generation["mean_entropy"], math.log(3) / 2, places=6)
@@ -180,12 +183,51 @@ class LocalAgentTests(unittest.TestCase):
             with self.assertRaises(FileExistsError):
                 agent.decide("goal", "observation", [], ["look"], logits_path=path)
 
-    def test_invalid_action_or_json_preserves_output_entropy(self):
-        for text in ('{"plan":"test","action":"LOOK"}', '```json\n{}\n```', '{"action":"look","action":"inventory"}'):
+    def test_invalid_action_id_or_format_preserves_output_entropy(self):
+        for text in ('PLAN: test\nACTION_ID: 2', '```json\n{}\n```', '{"action":"look","action":"inventory"}'):
             with self.subTest(text=text), self.assertRaises(LocalInvalidOutput) as error:
                 fake_agent(text=text).decide("goal", "observation", [], ["look"])
             self.assertEqual(error.exception.generation["raw_text"], text)
+            self.assertEqual(error.exception.generation["raw_model_output"], text)
             self.assertEqual(len(error.exception.generation["token_entropies"]), 2)
+
+    def test_normal_action_ids_map_original_order(self):
+        actions = ["look", "go to shelf 2", "take watch 1 from shelf 1", "examine shelf 1"]
+        for action_id in (0, 1, len(actions) - 1):
+            text = f"PLAN: current test plan\nACTION_ID: {action_id}"
+            result = fake_agent(text=text).decide("goal", "observation", [], actions)
+            self.assertEqual(result.action_id, action_id)
+            self.assertEqual(result.action, actions[action_id])
+            self.assertEqual(result.plan, "current test plan")
+
+    def test_out_of_range_ids_never_use_negative_index_or_fallback(self):
+        actions = ["look", "inventory"]
+        for action_id in (-1, len(actions), 999):
+            with self.subTest(action_id=action_id), self.assertRaises(LocalInvalidOutput) as caught:
+                fake_agent(text=f"PLAN: test\nACTION_ID: {action_id}").decide("goal", "observation", [], actions)
+            self.assertEqual(caught.exception.parsed["action_id"], action_id)
+            self.assertIsNone(caught.exception.parsed["action"])
+
+    def test_unparseable_ids_are_invalid(self):
+        for text in ("PLAN: test\nACTION_ID: abc", "PLAN: test\nACTION_ID: 1.0", "PLAN: test\nACTION_ID: true",
+                     "ACTION_ID: 0", "PLAN: test", "PLAN: test\nACTION_ID: 0\nACTION_ID: 1",
+                     "PLAN: test\nACTION_ID: 0 trailing explanation", "PLAN: \nACTION_ID: 0"):
+            with self.subTest(text=text), self.assertRaises(LocalInvalidOutput):
+                fake_agent(text=text).decide("goal", "observation", [], ["look", "inventory"])
+
+    def test_mapping_is_not_derived_from_plan_or_previous_ids(self):
+        agent = fake_agent(text="PLAN: mention a different command, do not use it as action\nACTION_ID: 0")
+        first = agent.decide("goal", "obs", [], ["look", "inventory"])
+        second = agent.decide("goal", "obs", [first.action], ["inventory", "look"])
+        self.assertEqual(first.action, "look")
+        self.assertEqual(second.action, "inventory")
+        self.assertEqual(json.loads(agent.tokenizer.messages[1]["content"])["admissible_actions"],
+                         [{"action_id": 0, "action": "inventory"}, {"action_id": 1, "action": "look"}])
+
+    def test_parser_retains_multiline_plan_without_action_matching(self):
+        plan, action_id = parse_action_id_output("PLAN: first step\nsecond step\nACTION_ID: 1\n")
+        self.assertEqual(plan, "first step\nsecond step")
+        self.assertEqual(action_id, 1)
 
     def test_token_score_alignment(self):
         agent = fake_agent()
@@ -247,7 +289,18 @@ class CollectionUnitTests(unittest.TestCase):
             self.assertEqual(report["success_count"], 1)
             rows = [json.loads(line) for line in raw_path.read_text().splitlines()]
             self.assertEqual(rows[1]["previous_actions"], ["look"])
+            self.assertEqual(rows[0]["action_id"], 0)
+            self.assertEqual(rows[0]["action"], rows[0]["admissible_actions"][rows[0]["action_id"]])
+            self.assertEqual(rows[0]["raw_model_output"], "PLAN: test-only plan\nACTION_ID: 0")
             self.assertTrue(all(row["mean_entropy"] is not None for row in rows))
+            legacy_rows = [{key: value for key, value in row.items() if key not in ("action_id", "raw_model_output", "action_selection_format")} for row in rows]
+            raw_path.write_text("".join(json.dumps(row) + "\n" for row in legacy_rows))
+            self.assertTrue(validate(raw_path, [summary], 1)["data_valid"])
+            corrupted = deepcopy(rows)
+            corrupted[0]["action_id"] = 1
+            corrupted[0]["admissible_actions"].append("inventory")
+            raw_path.write_text("".join(json.dumps(row) + "\n" for row in corrupted))
+            self.assertFalse(validate(raw_path, [summary], 1)["data_valid"])
             rows[0]["mean_entropy"] = 99
             raw_path.write_text("".join(json.dumps(row) + "\n" for row in rows))
             self.assertFalse(validate(raw_path, [summary], 1)["data_valid"])
@@ -260,12 +313,34 @@ class CollectionUnitTests(unittest.TestCase):
             raw_path, decisions_path = Path(folder) / "raw.jsonl", Path(folder) / "decisions.jsonl"
             with raw_path.open("x") as raw, decisions_path.open("x") as decisions:
                 summary = collect_local.run_episode(None, "test-only", 42, 3,
-                    fake_agent(text='{"plan":"test-only","action":"invented"}'), raw, decisions,
+                    fake_agent(text='PLAN: test-only\nACTION_ID: 3'), raw, decisions,
                     env_factory=lambda game, seed: (env, reset))
             self.assertEqual(summary["outcome"], "invalid_output")
             self.assertEqual(raw_path.read_text(), "")
-            self.assertEqual(json.loads(decisions_path.read_text())["action"], "invented")
+            logged = json.loads(decisions_path.read_text())
+            self.assertEqual(logged["action_id"], 3)
+            self.assertIsNone(logged["action"])
+            self.assertEqual(logged["raw_model_output"], 'PLAN: test-only\nACTION_ID: 3')
+            self.assertEqual(len(logged["token_entropies"]), 2)
             self.assertFalse(validate(raw_path, [summary], 1)["experiment_complete"])
+        env.step.assert_not_called()
+
+    def test_parsing_failure_saved_with_entropy_without_step(self):
+        env = MagicMock()
+        reset = {"feedback": "Your task is to: fixture.", "won": False, "admissible_commands": ["look"]}
+        text = "PLAN: test-only\nACTION_ID: not-an-integer"
+        with tempfile.TemporaryDirectory() as folder:
+            raw_path, decisions_path = Path(folder) / "raw.jsonl", Path(folder) / "decisions.jsonl"
+            with raw_path.open("x") as raw, decisions_path.open("x") as decisions:
+                summary = collect_local.run_episode(None, "test-only", 42, 3, fake_agent(text=text), raw, decisions,
+                                                    env_factory=lambda game, seed: (env, reset))
+            logged = json.loads(decisions_path.read_text())
+            self.assertEqual(summary["outcome"], "invalid_output")
+            self.assertEqual(raw_path.read_text(), "")
+            self.assertIsNone(logged["action_id"])
+            self.assertIsNone(logged["action"])
+            self.assertEqual(logged["raw_model_output"], text)
+            self.assertIsNotNone(logged["mean_entropy"])
         env.step.assert_not_called()
 
 

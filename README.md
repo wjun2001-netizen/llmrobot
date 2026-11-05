@@ -14,6 +14,7 @@ python collect_normal.py --agent local --model Qwen/Qwen3-4B --episodes 5
 ```
 
 `configs/local_llm.json`으로 모델·4-bit·생성 길이를 변경할 수 있습니다. 기본값은 NF4 4-bit, thinking 비활성화, raw logits 저장 비활성화입니다.
+현재 local agent는 `PLAN: ...` / `ACTION_ID: 정수`를 출력하고 현재 원본 `admissible_actions[action_id]`를 실행합니다. 원문·ID·매핑된 action을 함께 기록하며 이전 local 버전은 `archive/local_action_string_v1/`에 보존했습니다.
 전체 vocabulary token entropy와 step 평균을 nats로 저장하며, `--save-logits`에서만 raw logits를 추가 저장합니다.
 Cloud에서는 import와 CPU unit test만 수행했으며 모델 다운로드·GPU 실행·실제 episode는 수행하지 않았습니다.
 

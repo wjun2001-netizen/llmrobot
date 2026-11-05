@@ -1,0 +1,14 @@
+{
+  "protected_files_checked": 92,
+  "changed_protected_files": [],
+  "changed_archive_files": [],
+  "entropy_function_byte_identical": true,
+  "generate_call_ast_identical": true,
+  "unit_tests_passed": 29,
+  "real_model_runs": 0,
+  "real_alfworld_episodes": 0,
+  "actual_gpu_execution": false,
+  "action_format": "PLAN / ACTION_ID",
+  "invalid_attempts_file": "decisions.jsonl",
+  "successful_env_transitions_file": "trajectories.jsonl"
+}

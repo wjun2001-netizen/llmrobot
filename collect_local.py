@@ -65,7 +65,8 @@ def run_episode(game, episode_id, seed, max_steps, agent, raw_stream, decision_s
             if not isinstance(admissible, list) or not admissible:
                 raise LocalGenerationError("No admissible actions supplied by environment")
             event = {"episode_id": episode_id, "step": step, "goal": goal, "observation": state.get("feedback"),
-                     "plan": None, "action": None, "admissible_actions": list(admissible), "previous_actions": list(previous),
+                     "plan": None, "action_id": None, "action": None, "raw_model_output": None,
+                     "action_selection_format": "action_id_v1", "admissible_actions": list(admissible), "previous_actions": list(previous),
                      "reward": None, "done": None, "success": None, "agent_type": "llm", "backend": "local",
                      "model_name": agent.config.model_name, "token_entropies": None, "mean_entropy": None,
                      "generation": None, "validation_error": None}
@@ -74,9 +75,9 @@ def run_episode(game, episode_id, seed, max_steps, agent, raw_stream, decision_s
                 decision = agent.decide(goal, event["observation"], previous, admissible, logits_path=logits_path)
             except LocalInvalidOutput as exc:
                 event.update(generation=exc.generation, token_entropies=exc.generation["token_entropies"],
-                             mean_entropy=exc.generation["mean_entropy"], validation_error=str(exc))
+                             mean_entropy=exc.generation["mean_entropy"], raw_model_output=exc.generation["raw_text"], validation_error=str(exc))
                 if exc.parsed is not None:
-                    event.update(plan=exc.parsed.get("plan"), action=exc.parsed.get("action"))
+                    event.update(plan=exc.parsed.get("plan"), action_id=exc.parsed.get("action_id"), action=exc.parsed.get("action"))
                 append_jsonl(decision_stream, event)
                 summary.update(outcome="invalid_output", error=str(exc))
                 break
@@ -90,7 +91,7 @@ def run_episode(game, episode_id, seed, max_steps, agent, raw_stream, decision_s
                 append_jsonl(decision_stream, event)
                 summary.update(outcome="generation_error", error=event["validation_error"])
                 break
-            event.update(plan=decision.plan, action=decision.action, generation=decision.generation,
+            event.update(plan=decision.plan, action_id=decision.action_id, action=decision.action, raw_model_output=decision.generation["raw_text"], generation=decision.generation,
                          token_entropies=decision.generation["token_entropies"], mean_entropy=decision.generation["mean_entropy"])
             append_jsonl(decision_stream, event)
             next_state, reward, done = env.step(decision.action)
@@ -140,11 +141,13 @@ def collect(args, config):
         save_json(run / "config.json", {"backend": "local", "local_llm": config.public_config(), "packages": packages,
                                        "python": sys.version, "seed": args.seed, "episodes_requested": args.episodes,
                                        "max_steps": args.max_steps, "system_prompt": SYSTEM_PROMPT,
+                                       "action_selection_format": "action_id_v1",
+                                       "action_mapping": "Zero-based IDs in current original admissible_actions order; action = admissible_actions[action_id]",
                                        "generation_options": {"do_sample": False, "num_beams": 1, "use_model_defaults": False,
                                                               "return_dict_in_generate": True, "output_scores": True,
                                                               "output_logits": config.save_logits, "vocabulary_mask": None},
                                        "entropy_unit": "nats", "entropy_scope": "Full vocabulary generate.scores; fresh greedy config, no warpers/action-token masks. All generated tokens including EOS, excluding prompt.",
-                                       "mean_entropy_scope": "Arithmetic mean of token entropies in this one ALFWorld action's generated plan/JSON/action/EOS; not whole-episode average or action-only entropy",
+                                       "mean_entropy_scope": "Arithmetic mean of generated PLAN text, ACTION_ID labels/digits/separators and EOS in this one ALFWorld step; not whole-episode average or action-only entropy",
                                        "selected_games": [{"gamefile": str(p.relative_to(data_root)), "episode_seed": args.seed + i,
                                                            "sha256": hashlib.sha256(p.read_bytes()).hexdigest()} for i, p in enumerate(games)],
                                        "source_sha256": {str(p.relative_to(ROOT)): hashlib.sha256(p.read_bytes()).hexdigest() for p in files}})

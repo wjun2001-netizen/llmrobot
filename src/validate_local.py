@@ -4,6 +4,7 @@ import json
 import math
 from pathlib import Path
 
+from local_llm_agent import parse_action_id_output
 from src.validate_llm import validate as validate_transitions
 
 
@@ -19,6 +20,19 @@ def validate(path, summaries, expected_episodes):
                 continue
             if not isinstance(row, dict):
                 continue
+            # Historical string-action logs retain their original schema.
+            if row.get("action_selection_format") == "action_id_v1" or "action_id" in row or "raw_model_output" in row:
+                action_id, actions = row.get("action_id"), row.get("admissible_actions")
+                if type(action_id) is not int or not isinstance(actions, list) or not 0 <= action_id < len(actions):
+                    errors.append(f"line {number}: invalid action_id")
+                elif row.get("action") != actions[action_id]:
+                    errors.append(f"line {number}: action differs from original admissible_actions[action_id]")
+                try:
+                    plan, parsed_id = parse_action_id_output(row.get("raw_model_output"))
+                    if parsed_id != action_id or plan != row.get("plan"):
+                        errors.append(f"line {number}: raw output and parsed fields differ")
+                except ValueError:
+                    errors.append(f"line {number}: invalid raw_model_output format")
             entropies, mean = row.get("token_entropies"), row.get("mean_entropy")
             ids, vocab = row.get("generated_token_ids"), row.get("score_vocab_size")
             if row.get("backend") != "local" or row.get("entropy_unit") != "nats":

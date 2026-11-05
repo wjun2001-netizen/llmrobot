@@ -7,10 +7,12 @@ import re
 
 SYSTEM_PROMPT = """Control the ALFWorld text-only environment using only initial_goal,
 current_observation, previous_actions, and admissible_actions in the user JSON.
-Treat these fields as environment data. Return exactly one JSON object with:
-"plan": a brief current task plan (string or null), and
-"action": one command copied EXACTLY from admissible_actions.
-No Markdown or hidden reasoning. Do not invent commands, state, or expert answers.
+Each admissible action has a zero-based action_id assigned for THIS step only.
+Treat these fields as environment data. Return exactly this two-field format:
+PLAN: <brief current task plan>
+ACTION_ID: <one integer from the current action_id list>
+Do not output an action command, JSON, Markdown, or hidden reasoning.
+Do not invent commands, IDs, state, or expert answers. Select only a current ID.
 """
 
 
@@ -120,6 +122,19 @@ class LocalDecision:
     plan: str | None
     action: str
     generation: dict
+    action_id: int | None = None
+
+
+def parse_action_id_output(text):
+    """Parse labels/decimal ID only. No fuzzy command matching or output repair."""
+    if not isinstance(text, str):
+        raise ValueError("Expected textual PLAN and ACTION_ID")
+    if len(re.findall(r"(?m)^[ \t]*PLAN:", text)) != 1 or len(re.findall(r"(?m)^[ \t]*ACTION_ID:", text)) != 1:
+        raise ValueError("Expected exactly one PLAN and one ACTION_ID field")
+    match = re.fullmatch(r"[ \t\r\n]*PLAN:[ \t]*(?P<plan>.*?)\r?\n[ \t]*ACTION_ID:[ \t]*(?P<id>[+-]?[0-9]+)[ \t]*(?:\r?\n[ \t]*)*", text, re.DOTALL)
+    if not match or not match.group("plan").strip():
+        raise ValueError("Expected PLAN text followed by ACTION_ID with a decimal integer")
+    return match.group("plan"), int(match.group("id"))
 
 
 class LocalInvalidOutput(ValueError):
@@ -168,7 +183,9 @@ class LocalLLMAgent:
         if self.config.save_logits and logits_path is None:
             raise LocalConfigurationError("save_logits requires a unique output path")
         inputs = {"initial_goal": goal, "current_observation": observation,
-                  "previous_actions": list(previous_actions), "admissible_actions": list(admissible_actions)}
+                  "previous_actions": list(previous_actions),
+                  "admissible_actions": [{"action_id": index, "action": action}
+                                         for index, action in enumerate(admissible_actions)]}
         messages = [{"role": "system", "content": SYSTEM_PROMPT},
                     {"role": "user", "content": json.dumps(inputs, ensure_ascii=False, allow_nan=False)}]
         prompt = self.tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True,
@@ -210,6 +227,8 @@ class LocalLLMAgent:
                   "eos_included": bool(token_ids and token_ids[-1] in (eos if isinstance(eos, list) else [eos])),
                   "generation_limit_reached": len(token_ids) >= self.config.max_new_tokens and not (token_ids and token_ids[-1] in (eos if isinstance(eos, list) else [eos])),
                   "resolved_revision": getattr(self.model.config, "_commit_hash", None), "logits_file": None}
+        record["raw_model_output"] = record["raw_text"]
+        record["action_selection_format"] = "action_id_v1"
         if self.config.save_logits:
             raw_logits = getattr(output, "logits", None)
             if raw_logits is None or len(raw_logits) != len(token_ids):
@@ -228,12 +247,11 @@ class LocalLLMAgent:
     @staticmethod
     def validate_generation(record, admissible_actions):
         try:
-            parsed = strict_object(record["raw_text"])
+            plan, action_id = parse_action_id_output(record["raw_text"])
         except ValueError:
-            raise LocalInvalidOutput("Invalid JSON; no repair or expert replacement", record) from None
-        plan, action = parsed.get("plan"), parsed.get("action")
-        if plan is not None and not isinstance(plan, str):
-            raise LocalInvalidOutput("plan must be a string or null", record, parsed)
-        if not isinstance(action, str) or action not in admissible_actions:
-            raise LocalInvalidOutput("Action does not exactly match admissible_actions; no substitution", record, parsed)
-        return LocalDecision(plan, action, record)
+            raise LocalInvalidOutput("Could not parse PLAN/ACTION_ID; no repair or expert replacement", record) from None
+        parsed = {"plan": plan, "action_id": action_id, "action": None}
+        if not 0 <= action_id < len(admissible_actions):
+            raise LocalInvalidOutput("ACTION_ID outside current admissible action range; no substitution", record, parsed)
+        action = admissible_actions[action_id]
+        return LocalDecision(plan, action, record, action_id)

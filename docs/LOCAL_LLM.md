@@ -95,9 +95,18 @@ CUDA가 없으면 다운로드 전에 중단합니다. 인증이 필요한 HF �
 ## Agent 입력·출력과 유효 행동
 
 입력은 `initial_goal`, `current_observation`, `previous_actions`, `admissible_actions` 네 항목입니다.
-출력은 JSON `plan`과 `action`이며 plan은 제공되지 않으면 null입니다.
-action은 현재 admissible_actions와 **정확한 문자열 일치**가 확인될 때만 env.step에 전달합니다.
-invalid JSON, 미완료 출력, 허용되지 않는 action은 원문과 entropy를 보존하고 해당 episode를 중단합니다.
+현재 출력은 다음 형식입니다. 이전 문자열/JSON action 버전은 `archive/local_action_string_v1/` 및 Git 이력에 보존했습니다.
+
+```text
+PLAN: 현재 수행할 간단한 계획
+ACTION_ID: 0
+```
+
+매 step마다 원본 admissible_actions 순서대로 0-based ID를 부여해 prompt에 `{action_id, action}` 목록을 전달합니다.
+유효한 정수와 범위를 확인한 뒤 **`action = admissible_actions[action_id]`**로 실행할 원본 문자열을 가져옵니다.
+ID는 다음 step에서 새로 부여하며 목록을 정렬·필터링하거나 이전 step ID를 재사용하지 않습니다.
+음수·범위 밖 ID, 형식 오류·중복 ACTION_ID, 미완료 출력은 원문과 entropy를 보존하고 `invalid_output`으로 중단합니다.
+형식이 파싱되지 않은 필드는 null이며 원문은 그대로 저장합니다. invalid attempt는 `decisions.jsonl`에 기록하고 env.step을 실행하지 않습니다.
 공백/대소문자 보정, fuzzy matching, PDDL 정답 대체, 출력 재작성은 하지 않습니다.
 
 local 경로에는 AlfredExpert wrapper가 없습니다. PDDL facts/expert plan/walkthrough를 모델에 전달하지 않습니다.
@@ -132,7 +141,8 @@ mean_entropy = sum_t H_t / 생성 토큰 수
 ```
 
 0 확률 항은 0으로 처리하며, NaN/+inf 또는 모든 점수가 -inf인 비정상 분포는 가짜 값으로 대체하지 않고 오류 처리합니다.
-step 평균은 **해당 호출이 생성한 모든 토큰**의 평균입니다. plan·action·JSON 구문·EOS를 포함하고 prompt 토큰은 제외합니다.
+step 평균은 **해당 호출이 생성한 모든 토큰**의 평균입니다. PLAN 내용·ACTION_ID 레이블과 숫자·구분자·EOS를 포함하고 prompt 토큰은 제외합니다.
+entropy 계산 및 generate 옵션은 이전 버전과 동일하지만 출력 형식이 달라졌으므로 실험 간 형식 버전을 구분해야 합니다.
 `generated_token_ids`와 entropy 길이를 검증하고 EOS 포함 여부도 저장합니다.
 이 값은 quantized 모델의 전체 vocabulary 조건부 분포에 대한 수치 계산이며, action 후보 수준의 entropy나 episode 평균과는 다릅니다.
 bits 단위가 필요하면 nats 값을 `ln(2)`로 나눌 수 있습니다.
@@ -157,10 +167,11 @@ logits/episode_0000/step_00001.pt   # 명시적으로 활성화한 경우에만
 JSONL 형태를 보여주는 **설명용 예시**입니다. 실제 실험 결과가 아닙니다.
 
 ```json
-{"episode_id":"<실제 게임 상대 경로>","step":1,"goal":"<환경 목표>","observation":"<환경 관찰>","plan":"<모델 계획>","action":"<실제 허용 행동>","admissible_actions":["<실제 허용 행동>"],"previous_actions":[],"reward":0,"done":false,"success":false,"agent_type":"llm","backend":"local","model_name":"Qwen/Qwen3-4B","token_entropies":[1.2,0.3],"mean_entropy":0.75}
+{"episode_id":"<실제 게임 상대 경로>","step":1,"goal":"<환경 목표>","observation":"<환경 관찰>","raw_model_output":"PLAN: <모델 계획>\nACTION_ID: 0","plan":"<모델 계획>","action_id":0,"action":"<실제 허용 행동>","admissible_actions":["<실제 허용 행동>"],"previous_actions":[],"reward":0,"done":false,"success":false,"agent_type":"llm","backend":"local","model_name":"Qwen/Qwen3-4B","token_entropies":[1.2,0.3],"mean_entropy":0.75,"action_selection_format":"action_id_v1"}
 ```
 
 추가로 `generated_token_ids`, `score_vocab_size`, `entropy_unit`, `entropy_source`, `resolved_revision`, `next_observation`, `truncated`, `logits_file`을 저장합니다.
+validator는 새 형식에서 ID→원본 action 매핑과 raw_model_output→plan/ID 파싱 일치를 확인하고, 이전 문자열 기반 로그의 기존 스키마 검증도 유지합니다.
 success는 실제 환경 won 값이며 reward나 LLM 주장으로 추정하지 않습니다. 제공되지 않는 환경 값은 null로 남깁니다.
 실패 episode와 partial output을 삭제하거나 다른 성공 episode로 대체하지 않습니다.
 실행마다 고유 디렉터리와 배타적 파일 생성 모드를 사용해 기존 raw 파일을 덮어쓰지 않습니다.
