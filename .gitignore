@@ -5,3 +5,4 @@ __pycache__/
 *.pyc
 data/alfworld/
 runs_local/**/logits/
+runs_fault/**/logits/

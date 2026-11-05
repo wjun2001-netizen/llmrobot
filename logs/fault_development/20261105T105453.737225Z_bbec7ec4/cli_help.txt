@@ -1,0 +1,56 @@
+usage: collect_fault.py [-h] [--agent {local}] --fault
+                        {goal_drift,observation_loss,context_overload}
+                        [--severity {low,high}]
+                        [--injection-step INJECTION_STEP]
+                        [--reference-steps REFERENCE_STEPS]
+                        [--baseline-run BASELINE_RUN] [--paired]
+                        [--condition {no_fault,fault}]
+                        [--game GAME | --episode-id EPISODE_ID]
+                        [--config CONFIG] [--model MODEL]
+                        [--model-revision MODEL_REVISION]
+                        [--load-in-4bit | --no-load-in-4bit]
+                        [--save-logits | --no-save-logits]
+                        [--compute-dtype {float16,bfloat16}] [--device DEVICE]
+                        [--max-new-tokens MAX_NEW_TOKENS]
+                        [--max-context-tokens MAX_CONTEXT_TOKENS]
+                        [--check-imports] [--episodes EPISODES] [--seed SEED]
+                        [--max-steps MAX_STEPS]
+                        [--split {train,valid_seen,valid_unseen,valid_train}]
+                        [--task-type {pick_and_place_simple,look_at_obj_in_light,pick_clean_then_place_in_recep,pick_heat_then_place_in_recep,pick_cool_then_place_in_recep,pick_two_obj_and_place}]
+                        [--data-dir DATA_DIR] [--output-dir OUTPUT_DIR]
+
+Local-only runtime input fault collection. Normal collector/model
+implementation is untouched.
+
+options:
+  -h, --help            show this help message and exit
+  --agent {local}
+  --fault {goal_drift,observation_loss,context_overload}
+  --severity {low,high}
+  --injection-step INJECTION_STEP
+  --reference-steps REFERENCE_STEPS
+                        Explicit timing reference; default uses baseline
+                        length, then game walkthrough reference, then 20
+  --baseline-run BASELINE_RUN
+  --paired
+  --condition {no_fault,fault}
+  --game GAME
+  --episode-id EPISODE_ID
+  --config CONFIG
+  --model MODEL
+  --model-revision MODEL_REVISION
+  --load-in-4bit, --no-load-in-4bit
+  --save-logits, --no-save-logits
+  --compute-dtype {float16,bfloat16}
+  --device DEVICE
+  --max-new-tokens MAX_NEW_TOKENS
+  --max-context-tokens MAX_CONTEXT_TOKENS
+  --check-imports
+  --episodes EPISODES   Number of distinct games/pairs, not total condition
+                        executions
+  --seed SEED
+  --max-steps MAX_STEPS
+  --split {train,valid_seen,valid_unseen,valid_train}
+  --task-type {pick_and_place_simple,look_at_obj_in_light,pick_clean_then_place_in_recep,pick_heat_then_place_in_recep,pick_cool_then_place_in_recep,pick_two_obj_and_place}
+  --data-dir DATA_DIR
+  --output-dir OUTPUT_DIR

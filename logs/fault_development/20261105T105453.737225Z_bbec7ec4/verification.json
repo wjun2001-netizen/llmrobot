@@ -1,0 +1,19 @@
+{
+  "protected_existing_source_and_log_files": 112,
+  "changed_protected_files": [],
+  "normal_collector_unchanged": true,
+  "local_agent_and_entropy_generation_unchanged": true,
+  "fault_unit_tests_passed": 22,
+  "unchanged_local_unit_tests_passed": 29,
+  "total_tests_passed": 51,
+  "actual_models_loaded": 0,
+  "actual_alfworld_episodes": 0,
+  "gpu_execution_attempted": false,
+  "dependencies_added": false,
+  "new_fault_types": [
+    "goal_drift",
+    "observation_loss",
+    "context_overload"
+  ],
+  "paired_outcomes_are_observational_not_causal_proof": true
+}

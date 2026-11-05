@@ -1,0 +1,34 @@
+test_invalid_action_does_not_step_mock_environment (test_local_llm.CollectionUnitTests.test_invalid_action_does_not_step_mock_environment) ... ok
+test_local_rows_history_entropy_and_success_roundtrip (test_local_llm.CollectionUnitTests.test_local_rows_history_entropy_and_success_roundtrip) ... ok
+test_parsing_failure_saved_with_entropy_without_step (test_local_llm.CollectionUnitTests.test_parsing_failure_saved_with_entropy_without_step) ... ok
+test_all_generated_tokens_contribute_to_mean (test_local_llm.EntropyTests.test_all_generated_tokens_contribute_to_mean) ... ok
+test_float16_scores_promoted_and_large_logits_stable (test_local_llm.EntropyTests.test_float16_scores_promoted_and_large_logits_stable) ... ok
+test_invalid_scores_not_replaced_with_fake_entropy (test_local_llm.EntropyTests.test_invalid_scores_not_replaced_with_fake_entropy) ... ok
+test_skewed_matches_independent_probability_formula (test_local_llm.EntropyTests.test_skewed_matches_independent_probability_formula) ... ok
+test_uniform_full_vocabulary (test_local_llm.EntropyTests.test_uniform_full_vocabulary) ... ok
+test_zero_probability_tokens_have_zero_contribution (test_local_llm.EntropyTests.test_zero_probability_tokens_have_zero_contribution) ... ok
+test_4bit_loader_configuration_mock_only (test_local_llm.LocalAgentTests.test_4bit_loader_configuration_mock_only) ... ok
+test_config_and_cli_overrides (test_local_llm.LocalAgentTests.test_config_and_cli_overrides) ... ok
+test_context_limit_fails_without_truncation_or_generate (test_local_llm.LocalAgentTests.test_context_limit_fails_without_truncation_or_generate) ... ok
+test_generation_scores_and_unfiltered_greedy_config (test_local_llm.LocalAgentTests.test_generation_scores_and_unfiltered_greedy_config) ... ok
+test_import_or_construction_never_downloads (test_local_llm.LocalAgentTests.test_import_or_construction_never_downloads) ... ok
+test_invalid_action_id_or_format_preserves_output_entropy (test_local_llm.LocalAgentTests.test_invalid_action_id_or_format_preserves_output_entropy) ... ok
+test_loader_stops_before_download_without_cuda (test_local_llm.LocalAgentTests.test_loader_stops_before_download_without_cuda) ... ok
+test_logits_default_no_file_and_opt_in_exclusive_dump (test_local_llm.LocalAgentTests.test_logits_default_no_file_and_opt_in_exclusive_dump) ... ok
+test_mapping_is_not_derived_from_plan_or_previous_ids (test_local_llm.LocalAgentTests.test_mapping_is_not_derived_from_plan_or_previous_ids) ... ok
+test_nonquantized_loader_mock_only (test_local_llm.LocalAgentTests.test_nonquantized_loader_mock_only) ... ok
+test_normal_action_ids_map_original_order (test_local_llm.LocalAgentTests.test_normal_action_ids_map_original_order) ... ok
+test_out_of_range_ids_never_use_negative_index_or_fallback (test_local_llm.LocalAgentTests.test_out_of_range_ids_never_use_negative_index_or_fallback) ... ok
+test_parser_retains_multiline_plan_without_action_matching (test_local_llm.LocalAgentTests.test_parser_retains_multiline_plan_without_action_matching) ... ok
+test_token_score_alignment (test_local_llm.LocalAgentTests.test_token_score_alignment) ... ok
+test_transformers_does_not_merge_checkpoint_filters (test_local_llm.LocalAgentTests.test_transformers_does_not_merge_checkpoint_filters) ... ok
+test_unparseable_ids_are_invalid (test_local_llm.LocalAgentTests.test_unparseable_ids_are_invalid) ... ok
+test_all_backends_dispatch_without_running_them (test_local_llm.RouterTests.test_all_backends_dispatch_without_running_them) ... ok
+test_compatible_default_and_original_helpers (test_local_llm.RouterTests.test_compatible_default_and_original_helpers) ... ok
+test_import_check_does_not_load_cuda_or_model (test_local_llm.RouterTests.test_import_check_does_not_load_cuda_or_model) ... ok
+test_local_example_and_config_arguments (test_local_llm.RouterTests.test_local_example_and_config_arguments) ... ok
+
+----------------------------------------------------------------------
+Ran 29 tests in 3.472s
+
+OK

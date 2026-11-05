@@ -2,6 +2,7 @@
 
 현재 연구 실행 backend는 **로컬 Hugging Face causal LLM**입니다.
 [로컬 NVIDIA 설치·실행 및 entropy 정의](docs/LOCAL_LLM.md)를 먼저 참고하세요.
+이번 단계의 입력 경계 runtime fault 데이터 수집은 별도 [fault collector 지침](docs/FAULT_COLLECTION.md)을 참고하세요. 정상 collector/agent는 변경하지 않으며 LSTM·feature classifier·intervention은 구현하지 않았습니다.
 PDDL 본문은 `collect_pddl.py`에 원본 그대로 보존했고, `collect_normal.py`는 기본 `pddl`을 유지하는 backend 라우터입니다.
 OpenAI/Gemini 코드와 기존 로그는 변경하지 않았습니다. 아래 기존 API/baseline 결과는 이전 단계의 기록입니다.
 
