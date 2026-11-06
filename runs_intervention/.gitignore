@@ -1,0 +1,2 @@
+# Optional raw vocabulary logits can be large; keep trajectories/configs separately.
+**/logits/

@@ -1,0 +1,4 @@
+# Install the matching CUDA PyTorch wheel first, as for the existing local agent.
+# This adds no new diagnosis model: the encoder is the existing feature extractor.
+-r requirements-local.txt
+-r requirements-features.txt
