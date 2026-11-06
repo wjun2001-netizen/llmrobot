@@ -1,0 +1,17 @@
+{
+  "existing_files_checked": 204,
+  "changed_files": [
+    "run_intervention.py",
+    "docs/INTERVENTION.md",
+    "src/intervention.py",
+    "src/intervention_runtime.py",
+    "tests/test_intervention.py"
+  ],
+  "unexpected_changes": [],
+  "unchanged_critical_definitions": {
+    "LSTMRiskDetector": true,
+    "decision_features": true,
+    "training_entropy_threshold": true
+  },
+  "other_modes_and_risk_gate_AST_unchanged": true
+}

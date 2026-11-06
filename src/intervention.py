@@ -4,6 +4,7 @@ import math
 from pathlib import Path
 
 from src.timeseries_features import FeatureError, PromptCounter, digest, read_json
+from src.anomaly_calibration import standardized_diagnosis
 
 MODES = ("no_intervention", "periodic_goal_reinjection", "entropy_only", "proposed")
 DEFAULT_CHECKPOINT = "features/lstm/results/20261106T003226.747846Z_03a0d113/model.pt"
@@ -18,6 +19,8 @@ class InterventionConfig:
     entropy_threshold: float | None = None
     period: int = 5
     history_keep: int = 3
+    min_anomaly_z: float = 1.
+    calibration: dict | None = None
 
     def __post_init__(self):
         if self.mode not in MODES:
@@ -30,8 +33,10 @@ class InterventionConfig:
             raise ValueError("Risk/similarity/context thresholds out of range")
         if self.entropy_threshold is not None and (type(self.entropy_threshold) not in (int, float) or not math.isfinite(self.entropy_threshold) or self.entropy_threshold < 0):
             raise ValueError("entropy_threshold must be finite nonnegative nats")
-        if self.mode in ("entropy_only", "proposed") and self.entropy_threshold is None:
+        if self.mode == "entropy_only" and self.entropy_threshold is None:
             raise ValueError("Entropy threshold required: supply CLI value or derive from recorded training split")
+        if type(self.min_anomaly_z) not in (int, float) or not math.isfinite(self.min_anomaly_z) or self.min_anomaly_z <= 0:
+            raise ValueError("min_anomaly_z must be finite positive")
         if type(self.period) is not int or self.period < 1 or type(self.history_keep) is not int or self.history_keep < 1:
             raise ValueError("period/history_keep must be positive integers")
 
@@ -39,7 +44,7 @@ class InterventionConfig:
         return asdict(self)
 
 
-def choose_intervention(config, features, risk, *, step, injection_step, fault_active):
+def choose_intervention(config, features, risk, *, step, injection_step, fault_active, diagnostics=None):
     """At most one rule; diagnosis never uses the injected fault's known type."""
     if not fault_active or config.mode == "no_intervention":
         return None, "fault_inactive" if not fault_active else "disabled"
@@ -55,13 +60,13 @@ def choose_intervention(config, features, risk, *, step, injection_step, fault_a
         raise ValueError("Invalid LSTM risk")
     if risk < config.lstm_risk_threshold:
         return None, "risk_below_threshold"
-    if features["S"] <= config.similarity_threshold:
-        return "goal_reinjection", "risk_gate_and_S_at_or_below_threshold"
-    if features["C"] >= config.context_threshold:
-        return "context_cleaning", "risk_gate_and_C_at_or_above_threshold"
-    if features["E"] >= config.entropy_threshold:
-        return "reobservation_replanning", "risk_gate_and_E_at_or_above_threshold"
-    return None, "risk_high_but_no_rule_abnormality"
+    result = standardized_diagnosis(features, config.calibration)
+    if diagnostics is not None:
+        diagnostics.update(result)
+    if result["selected_anomaly_score"] < config.min_anomaly_z:
+        return None, "risk_high_but_below_min_anomaly_z"
+    kind = {"S": "goal_reinjection", "C": "context_cleaning", "E": "reobservation_replanning"}[result["selected_anomaly"]]
+    return kind, "risk_gate_and_largest_standardized_anomaly_" + result["selected_anomaly"]
 
 
 def decision_features(decision, original_goal, config, similarity, counter):

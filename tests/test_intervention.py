@@ -93,6 +93,9 @@ class FakeEnv:
 
 
 def config(mode="proposed", **kwargs):
+    if mode == "proposed":
+        kwargs.setdefault("calibration", {"statistics": {"E_mean": 1., "E_std": 1., "C_mean": .1, "C_std": .1,
+                                                          "S_mean": .9, "S_std": .1}, "std_floor": 1e-6})
     return InterventionConfig(mode=mode, entropy_threshold=1., **kwargs)
 
 
@@ -137,12 +140,12 @@ class RuleTests(unittest.TestCase):
     def test_lstm_threshold_and_warmup(self):
         self.assertIsNone(self.choose(config(), risk=.4999)[0])
         self.assertIsNone(self.choose(config(), risk=None)[0])
-        self.assertEqual(self.choose(config(), risk=.5)[0], "goal_reinjection")
+        self.assertEqual(self.choose(config(), risk=.5)[0], "context_cleaning")
 
-    def test_priority_S_then_C_then_E(self):
-        self.assertEqual(self.choose(config())[0], "goal_reinjection")
+    def test_largest_standardized_anomaly_replaces_old_priority(self):
+        self.assertEqual(self.choose(config())[0], "context_cleaning")
         self.assertEqual(self.choose(config(), {"E": 2., "C": .8, "S": .9})[0], "context_cleaning")
-        self.assertEqual(self.choose(config(), {"E": 1., "C": .1, "S": .9})[0], "reobservation_replanning")
+        self.assertEqual(self.choose(config(), {"E": 2., "C": .1, "S": .9})[0], "reobservation_replanning")
         self.assertIsNone(self.choose(config(), {"E": .1, "C": .1, "S": .9})[0])
 
     def test_invalid_thresholds(self):
@@ -259,6 +262,8 @@ class AdapterTests(unittest.TestCase):
         self.assertNotEqual(metadata["C"], metadata["detection_features"]["C"])
         self.assertEqual(metadata["lstm_input_window"][-1][1], metadata["detection_features"]["C"])
         self.assertEqual(adapter.history[-1][1], metadata["C"])
+        self.assertAlmostEqual(metadata["diagnostic_C_z"], (metadata["detection_features"]["C"] - .1) / .1)
+        self.assertEqual(metadata["selected_anomaly"], "C")
 
     def test_missing_live_prompt_count_or_NaN_rejected(self):
         agent = FakeAgent()
@@ -317,6 +322,9 @@ class DiskTests(unittest.TestCase):
         required = ("E", "C", "S", "lstm_risk", "intervention_triggered", "intervention_type", "intervention_reason",
                     "original_goal", "agent_goal_before", "agent_goal_after", "context_length_before", "context_length_after",
                     "fault_type", "fault_severity", "fault_active", "success", "done", "token_entropies", "raw_model_output")
+        required += ("diagnostic_E_z", "diagnostic_C_z", "diagnostic_S_z", "selected_anomaly", "selected_anomaly_score",
+                     "calibration_E_mean", "calibration_E_std", "calibration_C_mean", "calibration_C_std",
+                     "calibration_S_mean", "calibration_S_std")
         for row in rows:
             self.assertTrue(all(key in row for key in required))
             self.assertEqual(row["action"], row["admissible_actions"][row["action_id"]])
@@ -346,7 +354,7 @@ class DiskTests(unittest.TestCase):
         kwargs = dict(game="fixture", episode_id="ep", seed=42, max_steps=7, agent=FakeAgent(),
                       fault=FaultConfig("context_overload", "high", 2),
                       interventions=[config(mode) for mode in MODES], similarity=FakeSimilarity(),
-                      output_root=self.root, metadata={"data_kind": "unit_test_fixture"}, detector=FakeDetector(),
+                      output_root=self.root, metadata={"data_kind": "unit_test_fixture", "diagnostic_calibration": config().calibration}, detector=FakeDetector(),
                       env_factory=factory, seed_runtime=seeds.append)
         run, summaries, complete = execute_experiment(**kwargs)
         self.assertTrue(complete)
@@ -364,6 +372,7 @@ class DiskTests(unittest.TestCase):
         self.assertTrue(all(payload == payloads[0] for payload in payloads))
         self.assertTrue(all(item["pre_injection_prefix_match"] for item in summaries))
         self.assertTrue(all(item["false_intervention_count"] is None for item in summaries))
+        self.assertEqual(json.loads((run / "metrics.json").read_text())["diagnostic_calibration"], config().calibration)
         saved = (run / "metrics.json").read_bytes()
         second, _, _ = execute_experiment(**kwargs)
         self.assertNotEqual(run, second)

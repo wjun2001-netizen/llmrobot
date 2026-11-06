@@ -13,6 +13,7 @@ from src.fault_injection import FAULTS, FaultConfig
 from src.intervention import DEFAULT_CHECKPOINT, MODES, InterventionConfig, LSTMRiskDetector, training_entropy_threshold
 from src.intervention_runtime import execute_experiment, safe_output_root
 from src.timeseries_features import DEFAULT_SIMILARITY_MODEL, SentenceSimilarity, digest, read_json
+from src.anomaly_calibration import calibrate_training_observations
 
 ROOT = Path(__file__).resolve().parent
 DEFAULT_GAME = ROOT / "data/alfworld/json_2.1.1/train/pick_and_place_simple-Box-None-Sofa-205/trial_T20190907_214830_497445/game.tw-pddl"
@@ -35,6 +36,8 @@ def build_parser():
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--lstm-checkpoint", type=Path, default=ROOT / DEFAULT_CHECKPOINT)
     parser.add_argument("--lstm-risk-threshold", type=float, default=.5)
+    parser.add_argument("--min-anomaly-z", type=float, default=1.)
+    parser.add_argument("--calibration-windows", type=Path, help="Proposed TRAIN calibration CSV; default --entropy-training-windows. Split is always beside checkpoint")
     parser.add_argument("--similarity-threshold", type=float, default=.3)
     parser.add_argument("--context-threshold", type=float, default=.8)
     parser.add_argument("--entropy-threshold", type=float)
@@ -83,14 +86,23 @@ def prepare(args):
     assets = {str(game): digest(game)}
     if threshold is not None:
         entropy_basis = {"source": "explicit_CLI", "rationale": args.entropy_threshold_basis, "entropy_unit": "nats"}
-    elif any(mode in ("entropy_only", "proposed") for mode in modes):
+    elif "entropy_only" in modes:
         split_path = args.entropy_split or args.lstm_checkpoint.parent / "split.json"
         threshold, entropy_basis = training_entropy_threshold(args.entropy_training_windows, split_path)
         assets.update({entropy_basis["windows_path"]: entropy_basis["windows_sha256"], entropy_basis["split_path"]: entropy_basis["split_sha256"]})
+    detector = LSTMRiskDetector(args.lstm_checkpoint) if "proposed" in modes else None
+    calibration = None
+    if detector:
+        calibration = calibrate_training_observations(args.calibration_windows or args.entropy_training_windows,
+                                                      args.lstm_checkpoint.parent / "split.json")
+        if calibration["input_sha256"] != detector.training_input_sha256:
+            raise ValueError("Diagnosis calibration must match the checkpoint's training CSV SHA256")
+        assets.update({calibration["windows_path"]: calibration["input_sha256"], calibration["split_path"]: calibration["split_sha256"]})
     configs = [InterventionConfig(mode=mode, lstm_risk_threshold=args.lstm_risk_threshold,
                                   similarity_threshold=args.similarity_threshold, context_threshold=args.context_threshold,
-                                  entropy_threshold=threshold, period=args.goal_period, history_keep=args.history_keep) for mode in modes]
-    detector = LSTMRiskDetector(args.lstm_checkpoint) if "proposed" in modes else None
+                                  entropy_threshold=threshold, period=args.goal_period, history_keep=args.history_keep,
+                                  min_anomaly_z=args.min_anomaly_z,
+                                  calibration=calibration if mode == "proposed" else None) for mode in modes]
     if detector:
         assets[str(detector.checkpoint)] = detector.sha256
         if entropy_basis["source"] == "recorded_training_partition_only" and detector.training_input_sha256 != entropy_basis["windows_sha256"]:
@@ -107,7 +119,7 @@ def prepare(args):
                                             load_in_4bit=args.load_in_4bit, save_logits=args.save_logits,
                                             compute_dtype=args.compute_dtype, device=args.device,
                                             max_new_tokens=args.max_new_tokens, max_context_tokens=args.max_context_tokens)
-    sources = [Path(__file__), ROOT / "src/intervention.py", ROOT / "src/intervention_runtime.py",
+    sources = [Path(__file__), ROOT / "src/intervention.py", ROOT / "src/intervention_runtime.py", ROOT / "src/anomaly_calibration.py",
                ROOT / "local_llm_agent.py", ROOT / "collect_local.py", ROOT / "src/fault_injection.py",
                ROOT / "src/timeseries_features.py", ROOT / "src/lstm_classifier.py"]
     metadata = {"data_kind": "local_research_experiment", "system_prompt": SYSTEM_PROMPT, "timing": timing,
@@ -118,6 +130,9 @@ def prepare(args):
                                                 "rationale": "A priori fixed prompt budget fraction or CLI override, not fitted to outcomes"},
                                     "risk": {"value": args.lstm_risk_threshold, "default": .5,
                                              "rationale": "Requested sigmoid cutoff or explicit CLI override"},
+                                    "min_anomaly_z": {"value": args.min_anomaly_z, "default": 1.,
+                                                      "rationale": "Predeclared one-sided standardized anomaly gate; not tuned to experiment outcomes"},
+                                    "absolute_thresholds_used_by_proposed": False,
                                     "frozen_before_first_condition": True},
                 "feature_semantics": {"E": "mean_entropy in nats, unchanged full-vocabulary generation",
                                       "C": "actual generation prompt_token_count / max_context_tokens",
@@ -125,7 +140,9 @@ def prepare(args):
                                       "final_features": "E/C/S correspond to final selected decision",
                                       "detector_features": "detection_features and lstm_input_window: four previous final decisions + current candidate",
                                       "lstm_risk": "pre-intervention candidate risk, not re-evaluated for a second trigger"},
-                "priority": ["S", "C", "E"], "context_cleaning": "Trim old action history only; retain injected observation noise",
+                "diagnostic_calibration": calibration,
+                "diagnosis": "argmax of clamped one-sided standardized candidate anomalies after risk gate",
+                "exact_tie_break": ["E", "C", "S"], "context_cleaning": "Trim old action history only; retain injected observation noise",
                 "intervention_timing": "After candidate generation, before env.step; at most one context intervention and one re-generation",
                 "lstm_checkpoint": str(detector.checkpoint) if detector else None,
                 "lstm_checkpoint_sha256": detector.sha256 if detector else None,

@@ -13,6 +13,7 @@ from src.fault_runtime import FaultLogStream
 from src.intervention import choose_intervention, decision_features
 from src.llm_io import append_jsonl, new_run, save_json
 from src.timeseries_features import PromptCounter, digest
+from src.anomaly_calibration import diagnostic_log_fields
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -59,6 +60,7 @@ class InterventionAgent:
                         lstm_risk_source="candidate_before_intervention", feature_source="final_selected_generation",
                         fault_injection_preserved=True)
         self.metadata[self.step] = metadata  # Also retains attempted/failed decision provenance.
+        metadata.update(diagnostic_log_fields(self.intervention.calibration if self.intervention.mode == "proposed" else None))
         previous = list(previous_actions[self.history_start:])
         metadata.update(history_count_before=len(previous), history_count_after=len(previous), agent_previous_actions=list(previous))
         candidate_path = Path(logits_path).with_name(Path(logits_path).stem + ".candidate.pt") if logits_path else None
@@ -71,7 +73,7 @@ class InterventionAgent:
         risk = self.detector.predict(window) if self.intervention.mode == "proposed" and len(window) == 5 else None
         metadata.update(lstm_risk=risk, lstm_input_window=window if self.intervention.mode == "proposed" and len(window) == 5 else None)
         kind, reason = choose_intervention(self.intervention, features, risk, step=self.step,
-                                           injection_step=metadata["injection_step"], fault_active=metadata["fault_active"])
+                                           injection_step=metadata["injection_step"], fault_active=metadata["fault_active"], diagnostics=metadata)
         metadata["intervention_reason"] = reason
         final = candidate
         if kind is not None:
@@ -197,7 +199,7 @@ def execute_experiment(*, game, episode_id, seed, max_steps, agent, fault, inter
         compare_summaries(summaries, rows)
         check_inputs()
         save_json(run / "episodes.json", summaries)
-        save_json(run / "comparison.json", {"conditions": summaries, "priority": ["S", "C", "E"],
+        save_json(run / "comparison.json", {"conditions": summaries, "diagnosis": "largest_one_sided_train_standardized_anomaly", "exact_tie_break": ["E", "C", "S"],
                                             "false_intervention_count_available": False,
                                             "recovery_definition": "Observed success after intervention versus same-seed no_intervention task failure, matched pre-injection prefix, effective fault exposure; not causal proof"})
         complete = all(item["outcome"] in ("success", "task_failure", "step_limit") for item in summaries)
@@ -205,6 +207,7 @@ def execute_experiment(*, game, episode_id, seed, max_steps, agent, fault, inter
                                          "task_success_count": sum(item["success"] is True for item in summaries),
                                          "conditions": summaries, "threshold_basis": metadata.get("threshold_basis"),
                                          "feature_semantics": metadata.get("feature_semantics"),
+                                         "diagnostic_calibration": metadata.get("diagnostic_calibration"),
                                          "protected_inputs_unchanged": True,
                                          "detector_training_episode_overlap": metadata.get("detector_training_episode_overlap")})
         columns = ["mode", "fault_type", "fault_severity", "success", "steps", "outcome", "intervention_count",

@@ -30,7 +30,7 @@ python run_intervention.py \
   --game data/alfworld/json_2.1.1/train/pick_and_place_simple-Box-None-Sofa-205/trial_T20190907_214830_497445/game.tw-pddl \
   --fault context_overload --severity high --mode proposed \
   --lstm-checkpoint features/lstm/results/20261106T003226.747846Z_03a0d113/model.pt \
-  --injection-step 9 --seed 42
+  --injection-step 9 --seed 42 --min-anomaly-z 1.0
 ```
 
 All four conditions, with one independent environment initialization per condition
@@ -41,7 +41,7 @@ python run_intervention.py \
   --agent local --model Qwen/Qwen3-4B \
   --fault context_overload --severity high \
   --lstm-checkpoint features/lstm/results/20261106T003226.747846Z_03a0d113/model.pt \
-  --injection-step 9 --seed 42 --compare-all
+  --injection-step 9 --seed 42 --min-anomaly-z 1.0 --compare-all
 ```
 
 The game defaults to the same Box→Sofa path shown above. `--compare-all` runs the
@@ -65,11 +65,11 @@ the reference. Actual timing and its source are saved before the first condition
 | `no_intervention` | Never | Same agent inputs/actions as the fault collector; additional read-only feature logging |
 | `periodic_goal_reinjection` | Every 5 fault-active steps, configurable with `--goal-period` | Restore original agent-visible goal for this decision |
 | `entropy_only` | Candidate E strictly greater than fixed entropy threshold | Re-use current original observation and generate a fresh plan/action once |
-| `proposed` | Full five-step window and sigmoid(logit) ≥ risk threshold | First matching rule: S ≤ similarity threshold → goal reinjection; otherwise C ≥ context threshold → context cleaning; otherwise E ≥ entropy threshold → re-observation/replanning |
+| `proposed` | Full five-step window, sigmoid(logit) ≥ 0.5, maximum standardized anomaly ≥ `--min-anomaly-z 1.0` | Largest one-sided train-standardized anomaly: S → goal reinjection, C → context cleaning, E → re-observation/replanning |
 
 No rule runs before fault activation. There is no padding of LSTM warm-up windows;
-proposed first has enough evidence at step 5. A high risk with no abnormal E/C/S
-rule produces no intervention. Diagnosis never consults the injected fault label.
+proposed first has enough evidence at step 5. A high risk below the minimum
+standardized anomaly gate produces no intervention. Diagnosis never consults the injected fault label.
 Only proposed loads/calls the LSTM; other modes keep `lstm_risk = null`.
 
 Context cleaning retains the last `--history-keep 3` actions and removes older
@@ -123,23 +123,68 @@ A hard generation context-budget error may occur before E or S exists. Preserve
 that generation error; do not guess entropy/risk, silently truncate inputs, or
 pretend that a recovery occurred.
 
-## Thresholds are frozen before outcomes
+## Proposed calibration and standardized cause diagnosis
+
+The checkpoint, LSTM input window, raw E/C/S definitions, sigmoid and risk threshold
+0.5 are unchanged. **Only cause diagnosis after the risk gate is standardized**;
+LSTM inputs are never normalized by these calibration statistics.
+
+Proposed always reads the `split.json` beside the selected checkpoint and the
+matching original `features/lstm/windows.csv`. `--calibration-windows PATH` can
+specify that CSV explicitly; otherwise it uses `--entropy-training-windows`.
+CSV SHA256 must match both the saved split and checkpoint's training-input hash.
+Only TRAIN indices are used; validation never contributes to fitting statistics.
+
+Deduplicate by `(run_dir, episode_id, condition, step)` across TRAIN windows first.
+Use observations covered exclusively by label-0 windows for the reference
+population; exclude observations covered by both label-0 and label-1 windows.
+Window labels are weak outcome-based labels, so this conservative overlap policy
+avoids treating the same observation as both normal and risky. Fewer than two
+eligible observations stops calibration; no validation/label-1/default-statistics
+fallback is performed. Conflicting values for the same observation also stop it.
+
+Calculate population means and standard deviations (`ddof=0`). Preserve the six
+raw statistics and use `max(std, 1e-6)` only as the division denominator. The fixed
+floor, effective standard deviations, population policy/counts, source paths,
+input/split SHA256 and zero validation usage are saved in config and metrics.
+
+For a risk-qualified **candidate**, compute:
+
+```text
+z_E = (E - E_mean) / max(E_std, 1e-6)
+z_C = (C - C_mean) / max(C_std, 1e-6)
+z_S = (S_mean - S) / max(S_std, 1e-6)
+a_feature = max(0, z_feature)
+```
+
+Choose the largest `a_feature`, and intervene only when its value is at least
+`--min-anomaly-z` (default **1.0**, fixed before outcomes). Exact ties alone use
+**E, then C, then S**. This is a tie-break, not a cause priority: a larger C score
+always wins even if S also has an anomaly. No absolute E/C/S cutoff or injected
+fault label is used by proposed. The older similarity/context CLI flags remain
+accepted for command compatibility and have no effect on proposed diagnosis.
+
+Each step records signed `diagnostic_E_z/C_z/S_z`, clamped `anomaly_scores`,
+`selected_anomaly`, `selected_anomaly_score` and `calibration_E_mean/std`,
+`calibration_C_mean/std`, `calibration_S_mean/std`. During warm-up, before fault
+activation or below the risk gate, diagnosis fields are null. Below the minimum
+anomaly gate, the strongest positive candidate is still logged for audit, but no
+intervention occurs. If all clamped scores are zero, selected_anomaly is null and
+its score is zero. Candidate evidence and final executed E/C/S remain separate.
+
+## Other modes and thresholds stay unchanged
 
 - Risk: default 0.5 (`--lstm-risk-threshold`).
-- Similarity: default 0.3 (`--similarity-threshold`), an a priori cosine cutoff.
-- Context: default 0.8 (`--context-threshold`), an a priori budget fraction.
-- Entropy: supply a predeclared `--entropy-threshold VALUE` in nats, with
+- Entropy-only: supply a predeclared `--entropy-threshold VALUE` in nats, with
   `--entropy-threshold-basis 'reason'`; otherwise derive one fixed 95th percentile
   from `--entropy-training-windows features/lstm/windows.csv` using the saved
   `split.json` beside the checkpoint (`--entropy-split` can point elsewhere).
   Only saved **training** indices are used, validation excluded. Overlapping
   window steps are deduplicated by run/episode/condition/step, and the quantile
-  uses linear interpolation. Source SHA256 must match split metadata and, for
-  proposed, the checkpoint's training-input SHA256. Calibration stops on mismatch.
+  uses linear interpolation. Source SHA256 must match split metadata. Calibration stops on mismatch.
 
-The similarity/context defaults are not claimed as measured Box→Sofa optima;
-Cloud has no paired-analysis data from which to derive such values. Any explicit
-threshold changes must be decided before collecting outcomes. Exact values,
+No-intervention, periodic goal reinjection and entropy-only retain their existing
+decision behavior. Any explicit threshold changes must be decided before collecting outcomes. Exact values,
 basis and input hashes are frozen in `config.json` and carried into `metrics.json`.
 Entropy-only can use an explicit threshold without loading/accessing any LSTM
 checkpoint. No-intervention/periodic need no checkpoint or entropy calibration.
