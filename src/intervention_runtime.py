@@ -32,6 +32,7 @@ class InterventionAgent:
         self.counter = PromptCounter()
         self.metadata, self.history, self.step, self.history_start = {}, [], 0, 0
         self.generation_call_count = 0
+        self.cooldown_until_step = 0
 
     def _decide(self, goal, observation, previous, actions, logits_path):
         original = tuple(actions)
@@ -58,7 +59,13 @@ class InterventionAgent:
                         history_count_before=None, history_count_after=None, agent_previous_actions=None,
                         detection_features=None, lstm_input_window=None, pre_intervention_decision=None,
                         lstm_risk_source="candidate_before_intervention", feature_source="final_selected_generation",
-                        fault_injection_preserved=True)
+                        fault_injection_preserved=True,
+                        context_cleaning_history_trimmed=False, context_cleaning_observation_refreshed=False,
+                        candidate_C=None, final_C=None, final_features=None, candidate_selected_anomaly_score=None,
+                        cooldown_active=self.intervention.mode == "proposed" and self.step <= self.cooldown_until_step,
+                        cooldown_remaining=max(0, self.cooldown_until_step - self.step + 1) if self.intervention.mode == "proposed" else 0,
+                        cooldown_until_step=self.cooldown_until_step, intervention_suppressed=False,
+                        intervention_suppression_reason=None)
         self.metadata[self.step] = metadata  # Also retains attempted/failed decision provenance.
         metadata.update(diagnostic_log_fields(self.intervention.calibration if self.intervention.mode == "proposed" else None))
         previous = list(previous_actions[self.history_start:])
@@ -68,12 +75,17 @@ class InterventionAgent:
         features = decision_features(candidate, goal, self.config, self.similarity, self.counter)
         metadata.update(features)
         metadata.update(context_length_before=features["prompt_token_count"], context_length_after=features["prompt_token_count"],
-                        detection_features=dict(features))
+                        detection_features=dict(features), candidate_C=features["C"], final_C=features["C"], final_features=dict(features))
         window = [*self.history[-4:], [features[key] for key in ("E", "C", "S")]]
         risk = self.detector.predict(window) if self.intervention.mode == "proposed" and len(window) == 5 else None
         metadata.update(lstm_risk=risk, lstm_input_window=window if self.intervention.mode == "proposed" and len(window) == 5 else None)
         kind, reason = choose_intervention(self.intervention, features, risk, step=self.step,
                                            injection_step=metadata["injection_step"], fault_active=metadata["fault_active"], diagnostics=metadata)
+        metadata.update(candidate_selected_anomaly_score=metadata.get("selected_anomaly_score"),
+                        diagnosed_intervention_type=kind, diagnosed_intervention_reason=reason)
+        if metadata["cooldown_active"]:
+            metadata.update(intervention_suppressed=kind is not None, intervention_suppression_reason="intervention_cooldown")
+            kind, reason = None, "intervention_cooldown"
         metadata["intervention_reason"] = reason
         final = candidate
         if kind is not None:
@@ -83,21 +95,27 @@ class InterventionAgent:
             if kind == "goal_reinjection":
                 metadata["agent_goal"] = goal
             elif kind == "context_cleaning":
-                # Persistent removal of old *action history*. Current injected noise stays intact.
+                # Trim history and refresh from feedback already available at this transition.
                 self.history_start = max(self.history_start, len(previous_actions) - self.intervention.history_keep)
                 previous = list(previous_actions[self.history_start:])
+                metadata.update(agent_observation=observation, context_cleaning_history_trimmed=True,
+                                context_cleaning_observation_refreshed=True)
             else:
                 # Re-use the current true feedback already received; no env.look/reset/rollback.
                 metadata["agent_observation"] = observation
             metadata.update(agent_goal_after=metadata["agent_goal"], agent_observation_after=metadata["agent_observation"],
                             history_count_after=len(previous), agent_previous_actions=list(previous),
                             context_length_after=None, E=None, C=None, S=None, prompt_token_count=None,
-                            feature_source="final_generation_unavailable")
+                            feature_source="final_generation_unavailable", final_C=None, final_features=None)
             final = self._decide(metadata["agent_goal"], metadata["agent_observation"], previous, admissible_actions, logits_path)
             final_features = decision_features(final, goal, self.config, self.similarity, self.counter)
             metadata.update(final_features)
             metadata.update(context_length_after=final_features["prompt_token_count"], intervention_completed=True,
-                            feature_source="final_selected_generation")
+                            feature_source="final_selected_generation", final_C=final_features["C"], final_features=dict(final_features))
+            if self.intervention.mode == "proposed":
+                # The current env.step still executes once. Suppress the NEXT N transitions.
+                self.cooldown_until_step = self.step + self.intervention.intervention_cooldown
+                metadata["cooldown_until_step"] = self.cooldown_until_step
         self.history.append([metadata[key] for key in ("E", "C", "S")])
         # There is no second trigger evaluation/retry loop in this step.
         return replace(final, generation={**final.generation, **metadata})
@@ -123,6 +141,7 @@ def run_mode(game, episode_id, seed, max_steps, agent, fault, intervention, simi
                    injection_step=fault.injection_step, intervention_count=len(interventions),
                    completed_intervention_count=sum(event["intervention_completed"] for event in events),
                    generation_call_count=adapter.generation_call_count,
+                   cooldown_suppressed_count=sum(event["intervention_suppressed"] for event in events),
                    first_intervention_step=min(interventions) if interventions else None,
                    mean_lstm_risk=sum(risks) / len(risks) if risks else None,
                    false_intervention_count=None, false_intervention_reason="No per-step causal oracle labels; cannot infer false positives from final success",
@@ -208,6 +227,7 @@ def execute_experiment(*, game, episode_id, seed, max_steps, agent, fault, inter
                                          "conditions": summaries, "threshold_basis": metadata.get("threshold_basis"),
                                          "feature_semantics": metadata.get("feature_semantics"),
                                          "diagnostic_calibration": metadata.get("diagnostic_calibration"),
+                                         "intervention_cooldown": metadata.get("intervention_cooldown"),
                                          "protected_inputs_unchanged": True,
                                          "detector_training_episode_overlap": metadata.get("detector_training_episode_overlap")})
         columns = ["mode", "fault_type", "fault_severity", "success", "steps", "outcome", "intervention_count",

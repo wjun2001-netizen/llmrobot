@@ -93,6 +93,8 @@ class FakeEnv:
 
 
 def config(mode="proposed", **kwargs):
+    # Operator-focused legacy fixtures opt out; dedicated cooldown tests exercise default 5.
+    kwargs.setdefault("intervention_cooldown", 0)
     if mode == "proposed":
         kwargs.setdefault("calibration", {"statistics": {"E_mean": 1., "E_std": 1., "C_mean": .1, "C_std": .1,
                                                           "S_mean": .9, "S_std": .1}, "std_floor": 1e-6})
@@ -178,14 +180,15 @@ class AdapterTests(unittest.TestCase):
         self.assertEqual(event["intervention_type"], "goal_reinjection")
         self.assertEqual(adapter.similarity.inputs[-1][0], GOAL)
 
-    def test_context_cleaning_persists_but_injected_noise_stays(self):
+    def test_context_cleaning_refreshes_observation_and_fault_reapplies(self):
         adapter = self.adapter(config(context_threshold=.001), fault="context_overload")
         self.advance(adapter, 6)
         event = adapter.metadata[5]
         self.assertEqual(event["history_count_before"], 4)
         self.assertEqual(event["history_count_after"], 3)
         self.assertLess(event["context_length_after"], event["context_length_before"])
-        self.assertIn("[UNRELATED_CONTEXT]", adapter.agent.calls[-1][1])
+        self.assertEqual(adapter.agent.calls[-1][1], OBS)
+        self.assertIn("[UNRELATED_CONTEXT]", adapter.metadata[6]["agent_observation_before"])
         self.assertTrue(adapter.metadata[6]["fault_payload"]["applied"])
         self.assertEqual(adapter.metadata[6]["history_count_before"], 4)
         self.assertEqual(adapter.agent.calls[-1][2], ["look"] * 3)
@@ -275,6 +278,158 @@ class AdapterTests(unittest.TestCase):
         del decision.generation["prompt_token_count"]
         with self.assertRaises(FeatureError):
             decision_features(decision, GOAL, agent.config, FakeSimilarity(), PromptCounter())
+
+
+class ContextRecoveryCooldownTests(unittest.TestCase):
+    """Recovery-only changes; diagnosis uses existing synthetic calibration fixtures."""
+    def adapter(self, cooldown=5, **kwargs):
+        return AdapterTests().adapter(cfg=config(intervention_cooldown=cooldown), fault="context_overload", **kwargs)
+
+    def drive(self, adapter, steps):
+        previous = []
+        for _ in range(steps):
+            decision = adapter.decide(GOAL, OBS, previous, list(ACTIONS))
+            previous.append(decision.action)
+        return adapter.metadata
+
+    def test_context_cleaning_trims_history_and_refreshes_same_current_observation(self):
+        adapter = self.adapter()
+        event = self.drive(adapter, 5)[5]
+        self.assertEqual(event["intervention_type"], "context_cleaning")
+        self.assertTrue(event["context_cleaning_history_trimmed"])
+        self.assertTrue(event["context_cleaning_observation_refreshed"])
+        self.assertEqual((event["history_count_before"], event["history_count_after"]), (4, 3))
+        self.assertEqual(adapter.agent.calls[-1][2], ["look"] * 3)
+        self.assertIn("[UNRELATED_CONTEXT]", event["agent_observation_before"])
+        self.assertEqual(event["agent_observation_after"], event["original_observation"])
+        self.assertEqual(adapter.agent.calls[-1][1], OBS)
+        self.assertEqual(adapter.agent.calls[-1][3], ACTIONS)
+        self.assertLess(event["context_length_after"], event["context_length_before"])
+        self.assertLess(event["final_C"], event["candidate_C"])
+        self.assertEqual(event["candidate_C"], event["detection_features"]["C"])
+        self.assertEqual(event["final_C"], event["C"])
+        self.assertEqual(event["final_features"]["C"], event["C"])
+        self.assertEqual(event["candidate_selected_anomaly_score"], event["selected_anomaly_score"])
+
+    def test_fault_reapplies_unchanged_on_next_step(self):
+        adapter = self.adapter()
+        events = self.drive(adapter, 6)
+        expected = FaultInjector(FaultConfig("context_overload", "high", 2), 42, "fixture").apply(GOAL, OBS, 6)
+        event = events[6]
+        self.assertEqual(event["fault_payload"], expected["fault_payload"])
+        self.assertEqual(event["agent_observation_before"], expected["agent_observation"])
+        self.assertEqual(event["agent_observation_after"], expected["agent_observation"])
+        self.assertEqual(adapter.agent.calls[-1][1], expected["agent_observation"])
+        self.assertTrue(event["fault_active"])
+        self.assertTrue(event["fault_injection_preserved"])
+
+    def test_exactly_next_five_transitions_suppressed_then_resume(self):
+        adapter = self.adapter()
+        events = self.drive(adapter, 12)
+        self.assertEqual([step for step, event in events.items() if event["intervention_triggered"]], [5, 11])
+        self.assertEqual([events[step]["cooldown_remaining"] for step in range(6, 11)], [5, 4, 3, 2, 1])
+        for step in range(6, 11):
+            self.assertFalse(events[step]["intervention_triggered"])
+            self.assertTrue(events[step]["intervention_suppressed"])
+            self.assertEqual(events[step]["intervention_suppression_reason"], "intervention_cooldown")
+            self.assertEqual(events[step]["intervention_reason"], "intervention_cooldown")
+        self.assertFalse(events[11]["cooldown_active"])
+        self.assertEqual(len(adapter.agent.calls), 14)  # 12 candidates, 2 recovery generations.
+        self.assertTrue(all(event["intervention_count_this_step"] <= 1 for event in events.values()))
+
+    def test_cooldown_retains_risk_features_and_diagnosis(self):
+        adapter = self.adapter()
+        events = self.drive(adapter, 10)
+        self.assertEqual(len(adapter.detector.windows), 6)  # Steps 5 through 10, including all cooldown steps.
+        for step in range(6, 11):
+            event = events[step]
+            self.assertEqual(event["lstm_risk"], .8)
+            self.assertTrue(all(math.isfinite(event[key]) for key in ("E", "C", "S", "diagnostic_C_z")))
+            self.assertEqual(event["selected_anomaly"], "C")
+            self.assertEqual(event["diagnosed_intervention_type"], "context_cleaning")
+            self.assertEqual(event["final_features"], event["detection_features"])
+            self.assertTrue(event["fault_payload"]["applied"])
+
+    def test_zero_cooldown_allows_subsequent_step(self):
+        events = self.drive(self.adapter(cooldown=0), 7)
+        self.assertEqual([step for step, event in events.items() if event["intervention_triggered"]], [5, 6, 7])
+
+    def test_custom_two_transition_cooldown(self):
+        events = self.drive(self.adapter(cooldown=2), 11)
+        self.assertEqual([step for step, event in events.items() if event["intervention_triggered"]], [5, 8, 11])
+
+    def test_cooldown_defaults_and_validation(self):
+        self.assertEqual(InterventionConfig().intervention_cooldown, 5)
+        self.assertEqual(run_intervention.build_parser().parse_args([]).intervention_cooldown, 5)
+        self.assertEqual(run_intervention.build_parser().parse_args(["--intervention-cooldown", "2"]).intervention_cooldown, 2)
+        for value in (-1, 1.5, True):
+            with self.assertRaises(ValueError):
+                InterventionConfig(intervention_cooldown=value)
+
+    def test_cooldown_applies_after_goal_and_replanning_without_changing_operations(self):
+        for score, expected in ((.1, "goal_reinjection"), (.9, "reobservation_replanning")):
+            with self.subTest(kind=expected):
+                adapter = AdapterTests().adapter(cfg=config(intervention_cooldown=5), score=score, fault="observation_loss")
+                events = self.drive(adapter, 6)
+                self.assertEqual(events[5]["intervention_type"], expected)
+                if expected == "goal_reinjection":
+                    self.assertEqual(events[5]["agent_goal_after"], GOAL)
+                    self.assertEqual(events[5]["agent_observation_after"], events[5]["agent_observation_before"])
+                else:
+                    self.assertEqual(events[5]["agent_observation_after"], OBS)
+                    self.assertEqual(events[5]["agent_goal_after"], events[5]["agent_goal_before"])
+                self.assertEqual(events[6]["intervention_reason"], "intervention_cooldown")
+
+    def test_incomplete_recovery_does_not_arm_cooldown(self):
+        adapter = self.adapter(agent=FakeAgent(invalid_call=6))
+        previous = []
+        for _ in range(4):
+            previous.append(adapter.decide(GOAL, OBS, previous, list(ACTIONS)).action)
+        with self.assertRaises(LocalInvalidOutput):
+            adapter.decide(GOAL, OBS, previous, list(ACTIONS))
+        self.assertEqual(adapter.cooldown_until_step, 0)
+        self.assertFalse(adapter.metadata[5]["intervention_completed"])
+        self.assertIsNone(adapter.metadata[5]["final_C"])
+
+    def test_non_proposed_modes_ignore_cooldown(self):
+        for mode in MODES[:-1]:
+            with self.subTest(mode=mode):
+                cfg = config(mode, intervention_cooldown=5, period=1)
+                adapter = AdapterTests().adapter(cfg=cfg)
+                events = self.drive(adapter, 7)
+                expected = 0 if mode == "no_intervention" else 6
+                self.assertEqual(sum(event["intervention_triggered"] for event in events.values()), expected)
+                self.assertTrue(all(not event["cooldown_active"] for event in events.values()))
+
+    def test_runtime_single_transition_current_feedback_and_admissible_mapping(self):
+        class CurrentFeedbackEnv(FakeEnv):
+            def step(self, action):
+                state, reward, done = super().step(action)
+                state["feedback"] = OBS + f" transition {len(self.executed)}"
+                return state, reward, done
+        output = ROOT / "runs_intervention"
+        output.mkdir(exist_ok=True)
+        with tempfile.TemporaryDirectory(prefix="unit_test_fixture_", dir=output) as directory:
+            env, agent, opens = CurrentFeedbackEnv(steps=12), FakeAgent(), []
+            def factory(game, seed):
+                opens.append(seed)
+                return env, env.initial()
+            summary = run_mode("fixture", "ep", 42, 12, agent, FaultConfig("context_overload", "high", 2),
+                config(intervention_cooldown=5), FakeSimilarity(), Path(directory) / "proposed", detector=FakeDetector(), env_factory=factory)
+            rows = [json.loads(line) for line in (Path(directory) / "proposed/trajectories.jsonl").read_text().splitlines()]
+            self.assertEqual(len(opens), 1)
+            self.assertEqual(env.reset_count, 0)
+            self.assertEqual(env.goal, GOAL)
+            self.assertEqual(env.actions, ACTIONS)
+            self.assertEqual(len(env.executed), 12)
+            self.assertEqual(summary["intervention_count"], 2)
+            self.assertEqual(len(agent.calls), 14)
+            self.assertTrue(all(row["action"] == row["admissible_actions"][row["action_id"]] for row in rows))
+            self.assertEqual(rows[4]["agent_observation_after"], OBS + " transition 4")
+            self.assertEqual(rows[4]["original_observation"], rows[4]["agent_observation_after"])
+            self.assertIn("[UNRELATED_CONTEXT]", rows[5]["agent_observation_after"])
+            self.assertEqual(rows[5]["intervention_reason"], "intervention_cooldown")
+            self.assertTrue(all(row["fault_injection_preserved"] for row in rows))
 
 
 class DiskTests(unittest.TestCase):

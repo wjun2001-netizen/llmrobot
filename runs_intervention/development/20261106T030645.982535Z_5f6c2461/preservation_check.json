@@ -1,0 +1,21 @@
+{
+  "existing_files_checked": 211,
+  "changed_files": [
+    "run_intervention.py",
+    "docs/INTERVENTION.md",
+    "src/intervention.py",
+    "src/intervention_runtime.py",
+    "tests/test_intervention.py"
+  ],
+  "unexpected_changes": [],
+  "critical_AST_checks_unchanged": {
+    "choose_intervention": true,
+    "LSTMRiskDetector": true,
+    "decision_features": true,
+    "training_entropy_threshold": true,
+    "action_mapping_and_generation_forwarding": true,
+    "goal_reinjection_operator": true,
+    "reobservation_replanning_operator": true
+  },
+  "fault_injector_and_anomaly_calibration_sources_unchanged": true
+}

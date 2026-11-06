@@ -30,7 +30,7 @@ python run_intervention.py \
   --game data/alfworld/json_2.1.1/train/pick_and_place_simple-Box-None-Sofa-205/trial_T20190907_214830_497445/game.tw-pddl \
   --fault context_overload --severity high --mode proposed \
   --lstm-checkpoint features/lstm/results/20261106T003226.747846Z_03a0d113/model.pt \
-  --injection-step 9 --seed 42 --min-anomaly-z 1.0
+  --injection-step 9 --seed 42 --min-anomaly-z 1.0 --intervention-cooldown 5
 ```
 
 All four conditions, with one independent environment initialization per condition
@@ -41,7 +41,7 @@ python run_intervention.py \
   --agent local --model Qwen/Qwen3-4B \
   --fault context_overload --severity high \
   --lstm-checkpoint features/lstm/results/20261106T003226.747846Z_03a0d113/model.pt \
-  --injection-step 9 --seed 42 --min-anomaly-z 1.0 --compare-all
+  --injection-step 9 --seed 42 --min-anomaly-z 1.0 --intervention-cooldown 5 --compare-all
 ```
 
 The game defaults to the same Box→Sofa path shown above. `--compare-all` runs the
@@ -72,21 +72,39 @@ proposed first has enough evidence at step 5. A high risk below the minimum
 standardized anomaly gate produces no intervention. Diagnosis never consults the injected fault label.
 Only proposed loads/calls the LSTM; other modes keep `lstm_risk = null`.
 
-Context cleaning retains the last `--history-keep 3` actions and removes older
-actions from future agent-visible history; the full executed action list remains
-in the trajectory. History can grow again until another cleaning event. The
-currently injected observation noise **remains**. Goal reinjection and
-re-observation apply to this decision only: the original fault is independently
-applied again at every subsequent step. `fault_payload`, original inputs and
-before/after inputs are all retained. Re-observation uses feedback already
-available from the unchanged current state; it adds no `look` action, extra
-transition, reset, rollback or oracle action.
+Context Cleaning = **Context History Trimming + Current Observation Refresh**.
+It retains the last `--history-keep 3` actions, removes older agent-visible actions,
+and replaces the currently faulted observation with the original current feedback
+already available at this same environment transition. The unchanged agent then
+generates once more with the trimmed history, refreshed observation and exactly
+the same admissible action list. Only the final action causes one environment
+transition; there is no `look` action, extra transition, reset, rollback or expert
+action. The full executed history remains in the trajectory and visible history
+can grow again until the next cleaning event.
+
+The observation refresh applies to this decision only. The unchanged fault injector
+runs again at the next step, including during cooldown. `fault_payload`, original
+feedback and faulted/refreshed before/after inputs remain logged, with
+`fault_injection_preserved=true`. Goal reinjection and re-observation/replanning
+operators retain their existing behavior and observation provenance.
+
+Proposed uses `--intervention-cooldown 5` by default. After any completed proposed
+intervention at step **t**, suppress further interventions on **t+1 through t+5**;
+the earliest next intervention is **t+6**. The interval counts normal environment
+transitions, not wall time or extra generation calls. Risk, E/C/S and existing
+anomaly diagnosis are still calculated; only the recovery operation is suppressed.
+`intervention_reason` and `intervention_suppression_reason` record
+`intervention_cooldown`, while `diagnosed_intervention_type/reason` preserve what
+the unchanged diagnosis would have requested. `cooldown_active/remaining/until_step`
+make the interval auditable. Failed/incomplete recovery does not start cooldown.
+`--intervention-cooldown 0` disables suppression; other nonnegative integers are
+supported. This policy is independent of risk/anomaly thresholds and has no effect
+on no-intervention, periodic goal reinjection or entropy-only.
 
 The agent has no previous-plan input/cache to clear. Replanning simply calls its
 unchanged `decide()` again with revised inputs. If those inputs are identical,
-greedy generation may produce the same result. Cleaning history alone may also
-be insufficient to recover from long observation noise. These are experimental
-outcomes, not reasons to change thresholds, remove the fault or substitute actions.
+greedy generation may produce the same result. Recovery outcomes must be measured
+locally; there is no automatic threshold adjustment or action substitution.
 
 ## Causal timing and feature provenance
 
@@ -118,6 +136,16 @@ are not silently mixed. Logits, if enabled, have separate candidate/final files.
 `context_length_before/after` are actual prompt **token** counts; action counts
 are separately named `history_count_before/after`. `agent_previous_actions` is
 the history really forwarded to the model.
+
+Cleaning logs `context_cleaning_history_trimmed=true` and
+`context_cleaning_observation_refreshed=true` when those recovery input operations
+are performed. Actual before/after action counts and prompt token counts remain
+available even if an operation changes no text. `candidate_C`, `final_C`,
+`candidate_selected_anomaly_score` and `final_features` explicitly separate trigger
+evidence from executed decision features. A failed recovery leaves final fields
+null rather than relabeling candidate values as final. The summary's
+`cooldown_suppressed_count` counts decisions that would have requested intervention
+but were suppressed; it does not count below-threshold diagnosis as a false alarm.
 
 A hard generation context-budget error may occur before E or S exists. Preserve
 that generation error; do not guess entropy/risk, silently truncate inputs, or

@@ -46,6 +46,8 @@ def build_parser():
     parser.add_argument("--entropy-split", type=Path, help="Default: split.json beside LSTM checkpoint; used only for train-only entropy calibration")
     parser.add_argument("--goal-period", type=int, default=5)
     parser.add_argument("--history-keep", type=int, default=3)
+    parser.add_argument("--intervention-cooldown", type=int, default=5,
+                        help="Proposed only: suppress interventions for N subsequent environment transitions after completed recovery (0 disables)")
     parser.add_argument("--similarity-revision")
     parser.add_argument("--embedding-local-files-only", action="store_true")
     parser.add_argument("--output-dir", type=Path, default=ROOT / "runs_intervention")
@@ -102,6 +104,7 @@ def prepare(args):
                                   similarity_threshold=args.similarity_threshold, context_threshold=args.context_threshold,
                                   entropy_threshold=threshold, period=args.goal_period, history_keep=args.history_keep,
                                   min_anomaly_z=args.min_anomaly_z,
+                                  intervention_cooldown=args.intervention_cooldown,
                                   calibration=calibration if mode == "proposed" else None) for mode in modes]
     if detector:
         assets[str(detector.checkpoint)] = detector.sha256
@@ -142,7 +145,9 @@ def prepare(args):
                                       "lstm_risk": "pre-intervention candidate risk, not re-evaluated for a second trigger"},
                 "diagnostic_calibration": calibration,
                 "diagnosis": "argmax of clamped one-sided standardized candidate anomalies after risk gate",
-                "exact_tie_break": ["E", "C", "S"], "context_cleaning": "Trim old action history only; retain injected observation noise",
+                "exact_tie_break": ["E", "C", "S"], "context_cleaning": "Trim action history and refresh observation from the same current true feedback; fault reapplies next step",
+                "intervention_cooldown": {"transitions": args.intervention_cooldown, "mode": "proposed_only",
+                                          "policy": "Suppress next N transitions after completed intervention; still compute candidate features/risk/diagnosis"},
                 "intervention_timing": "After candidate generation, before env.step; at most one context intervention and one re-generation",
                 "lstm_checkpoint": str(detector.checkpoint) if detector else None,
                 "lstm_checkpoint_sha256": detector.sha256 if detector else None,

@@ -21,6 +21,7 @@ class InterventionConfig:
     history_keep: int = 3
     min_anomaly_z: float = 1.
     calibration: dict | None = None
+    intervention_cooldown: int = 5
 
     def __post_init__(self):
         if self.mode not in MODES:
@@ -39,6 +40,8 @@ class InterventionConfig:
             raise ValueError("min_anomaly_z must be finite positive")
         if type(self.period) is not int or self.period < 1 or type(self.history_keep) is not int or self.history_keep < 1:
             raise ValueError("period/history_keep must be positive integers")
+        if type(self.intervention_cooldown) is not int or self.intervention_cooldown < 0:
+            raise ValueError("intervention_cooldown must be a nonnegative integer")
 
     def public_config(self):
         return asdict(self)
