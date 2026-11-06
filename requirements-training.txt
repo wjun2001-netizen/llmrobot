@@ -1,0 +1,2 @@
+# Small CPU-first classifier; independent from ALFWorld/model-generation packages.
+torch>=2.6,<3

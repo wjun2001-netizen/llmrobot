@@ -1,0 +1,8 @@
+{
+  "tests_run": 124,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "success": true,
+  "mode": "offline CPU mock and synthetic unit/integration tests; no pretrained download or live ALFWorld"
+}

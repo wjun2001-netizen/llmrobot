@@ -1,0 +1,34 @@
+test_cannot_split_one_group (test_lstm_training.DataTests.test_cannot_split_one_group) ... ok
+test_column_order_does_not_matter (test_lstm_training.DataTests.test_column_order_does_not_matter) ... ok
+test_detect_group_leakage (test_lstm_training.DataTests.test_detect_group_leakage) ... ok
+test_detect_pair_leakage (test_lstm_training.DataTests.test_detect_pair_leakage) ... ok
+test_detect_sample_overlap_and_duplicates (test_lstm_training.DataTests.test_detect_sample_overlap_and_duplicates) ... ok
+test_duplicate_sample (test_lstm_training.DataTests.test_duplicate_sample) ... ok
+test_empty_input (test_lstm_training.DataTests.test_empty_input) ... ok
+test_explicit_time_major (test_lstm_training.DataTests.test_explicit_time_major) ... ok
+test_invalid_features (test_lstm_training.DataTests.test_invalid_features) ... ok
+test_invalid_metadata (test_lstm_training.DataTests.test_invalid_metadata) ... ok
+test_missing_column (test_lstm_training.DataTests.test_missing_column) ... ok
+test_paired_conditions_stay_together (test_lstm_training.DataTests.test_paired_conditions_stay_together) ... ok
+test_single_class_train_rejected (test_lstm_training.DataTests.test_single_class_train_rejected) ... ok
+test_split_reproducible_and_disjoint (test_lstm_training.DataTests.test_split_reproducible_and_disjoint) ... ok
+test_weight_uses_only_train (test_lstm_training.DataTests.test_weight_uses_only_train) ... ok
+test_wrong_window_size (test_lstm_training.DataTests.test_wrong_window_size) ... ok
+test_auc_ties_and_extremes (test_lstm_training.ModelAndMetricTests.test_auc_ties_and_extremes) ... ok
+test_final_hidden_and_no_sigmoid (test_lstm_training.ModelAndMetricTests.test_final_hidden_and_no_sigmoid) ... ok
+test_invalid_metrics (test_lstm_training.ModelAndMetricTests.test_invalid_metrics) ... ok
+test_invalid_model_input (test_lstm_training.ModelAndMetricTests.test_invalid_model_input) ... ok
+test_metrics (test_lstm_training.ModelAndMetricTests.test_metrics) ... ok
+test_model_architecture_and_shapes (test_lstm_training.ModelAndMetricTests.test_model_architecture_and_shapes) ... ok
+test_single_class_validation (test_lstm_training.ModelAndMetricTests.test_single_class_validation) ... ok
+test_cli_cpu (test_lstm_training.TrainingTests.test_cli_cpu) ... ok
+test_cli_defaults (test_lstm_training.TrainingTests.test_cli_defaults) ... ok
+test_end_to_end_outputs_and_reproducibility (test_lstm_training.TrainingTests.test_end_to_end_outputs_and_reproducibility) ... ok
+test_float32_overflow_rejected (test_lstm_training.TrainingTests.test_float32_overflow_rejected) ... ok
+test_invalid_config (test_lstm_training.TrainingTests.test_invalid_config) ... ok
+test_single_class_validation_training_completes (test_lstm_training.TrainingTests.test_single_class_validation_training_completes) ... ok
+
+----------------------------------------------------------------------
+Ran 29 tests in 6.768s
+
+OK
